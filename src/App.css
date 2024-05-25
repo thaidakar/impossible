@@ -1,0 +1,19 @@
+.card {
+    border: 2px solid black !important;
+}
+
+.stacked {
+    margin-top: -70px;
+}
+
+.pointer {
+    cursor: pointer;
+}
+
+.suite-r {
+    color: #db1424;
+}
+
+.card-body {
+    font-size: xx-large;
+}
