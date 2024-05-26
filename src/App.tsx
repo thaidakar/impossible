@@ -281,8 +281,8 @@ export const App = () => {
   
   return (
     <ChakraProvider theme={theme}>
-      <Box textAlign="center" fontSize="xl">
-        <VStack minH="100vh" p={3} overflowY='hidden'>
+      <Box textAlign="center" fontSize='xl' overflowY='hidden'> 
+        <VStack minH="100vh" p={3}>
           <HStack w='100%' justifyContent='space-between'>
             <Tooltip label='Reset Deck' openDelay={300}>
               <Button variant='ghost' onClick={resetDeck}>
