@@ -282,7 +282,7 @@ export const App = () => {
   return (
     <ChakraProvider theme={theme}>
       <Box textAlign="center" fontSize='xl' overflowY='hidden'> 
-        <VStack minH="100vh" p={3}>
+        <VStack minH="100vh" p={3} overflowY='hidden'>
           <HStack w='100%' justifyContent='space-between'>
             <Tooltip label='Reset Deck' openDelay={300}>
               <Button variant='ghost' onClick={resetDeck}>
@@ -311,12 +311,12 @@ export const App = () => {
             </Menu>
           </HStack>
           <VStack>
-            <Box style={{ borderBottom: `${ board.length > 7 ? '2px solid black' : ''}`}} h={500} overflowX='hidden' overflowY='auto'>
+            <Box style={{ borderBottom: `${ board.length > 7 ? '2px solid black' : ''}`}} h={550} overflowX='hidden' overflowY='auto'>
               <SimpleGrid key={Math.random()} columns={4} spacingX={[1, 9]}>
                 {board && displayBoard()}
               </SimpleGrid>
             </Box>
-            <Button onClick={() => drawRow()}>Add Row</Button>
+            <Button w='100%' onClick={() => drawRow()}>Add Row</Button>
           </VStack>
         </VStack>
       </Box>
