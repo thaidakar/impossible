@@ -17,3 +17,7 @@
 .card-body {
     font-size: xx-large;
 }
+
+.empty {
+    background-color: transparent !important;
+}

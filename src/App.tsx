@@ -18,12 +18,17 @@ import {
   StackItem,
   Tooltip,
   useBoolean,
-} from "@chakra-ui/react"
-import { ColorModeSwitcher } from "./ColorModeSwitcher"
-import { Logo } from "./Logo"
-import { GetNextCard, Card, suiteValues, cardValues, displayName, Suite, CardVal } from "./Logic/Deck"
+  MenuButton,
+  Menu,
+  IconButton,
+  MenuList,
+  MenuItem,
+  Portal,
+} from "@chakra-ui/react";
+import { ColorModeSwitcher } from "./ColorModeSwitcher";
+import { GetNextCard, Card, suiteValues, cardValues, displayName, Suite, CardVal } from "./Logic/Deck";
+import { HamburgerIcon, QuestionIcon, RepeatIcon } from "@chakra-ui/icons";
 import './App.css';
-import { RepeatIcon } from "@chakra-ui/icons"
 
 export const App = () => {
 
@@ -32,6 +37,7 @@ export const App = () => {
   const [reset, setReset] = useBoolean(true);
   const [addRow, setAddRow] = useBoolean(false);
   const [cleared, setCleared] = React.useState(0);
+  const [moveNext, setMoveNext] = useBoolean(false);
 
   React.useEffect(() => {
     const handleSpacebarPress = (event: KeyboardEvent) => {
@@ -88,6 +94,10 @@ export const App = () => {
         drawRow(_deck, _board);
       }
     }
+
+    if (deck.length === 0 && board.length === 0 && !reset) {
+      setReset.on();
+    }
   }, [deck, board]);
 
   const resetDeck = () => {
@@ -142,11 +152,8 @@ export const App = () => {
   };
 
   const canRemove = (card: Card, ridx: number, cidx: number) => {
-    // Cannot clear if there is a card below
-    if (ridx + 1 <= board[ridx].length - 1) {
-      const cardBelow = board[ridx+1][cidx]
-      if (!!cardBelow && !cardBelow.hidden) return false;
-    }
+    if (!canClick(ridx, cidx)) return false;
+    
     // Cannot clear if there is not a higher card on the same row
     const colComp = [];
     for (let i = board.length - 1; i > -1; i--) {
@@ -173,20 +180,48 @@ export const App = () => {
 
   const handleCardClick = (ridx: number, cidx: number) => {
 
+    let mRidx = -1;
+    let mCidx = -1;
+    
     let _board = board.map((r, rowIndex) =>
     r.map((card, colIndex) => {
-        if (rowIndex === ridx && colIndex === cidx)
+        if (rowIndex === ridx && colIndex === cidx) {
           if (canRemove(card, ridx, cidx)) {
             setCleared(c => ++c);
+            if (ridx === 0) setMoveNext.on();
             return {...card, hidden: true};
           }
-          else 
+          else {
+            if (moveNext && canClick(ridx, cidx)) {
+              mRidx = ridx;
+              mCidx = cidx;
+              setMoveNext.off();
+              return card;
+            }
             console.warn('Cannot clear this card');
+          }
+        }
         return card;
     }));
 
+    if (mRidx > -1 && mCidx > -1) {
+      handleCardRightClick(mRidx, mCidx);
+      return;
+    }
+
     setBoard(_board);
   };
+
+  function canClick(ridx: number, cidx: number) {
+    // Cannot click if there is a card below
+    if (ridx + 1 <= board[ridx].length - 1) {
+      const cardBelow = board[ridx+1][cidx];
+      if (!!cardBelow && !cardBelow.hidden) {
+        return false;
+      }
+    }
+    return true;
+  }
 
   const handleCardRightClick = (ridx: number, cidx: number) => {
 
@@ -223,9 +258,9 @@ export const App = () => {
     return board.map((row, ridx) => 
             row.map((card, cidx) => 
               <CardElement 
-                style={{visibility: card.hidden ? 'hidden' : 'visible', zIndex: ridx}} 
-                className={(ridx === 0 ? '': 'stacked') + ' card'}
-                w={100} h={130} p={0} 
+                style={{visibility: card.hidden && ridx !== 0 ? 'hidden' : 'visible', zIndex: ridx}} 
+                className={`${(ridx === 0 ? '': 'stacked')} ${ridx === 0 && !!card.hidden ? 'empty' : ''} card`}
+                w={[85, 90, 100]} h={130} p={0} 
                 key={card.suite + card.val}
                 onClick={(e) => cardClick(e, ridx, cidx)} 
                 onContextMenu={(e) => { e.preventDefault(); if (e.type === 'contextmenu') handleCardRightClick(ridx, cidx);}}>
@@ -247,26 +282,43 @@ export const App = () => {
   return (
     <ChakraProvider theme={theme}>
       <Box textAlign="center" fontSize="xl">
-        <Grid minH="100vh" p={3}>
-          <ColorModeSwitcher justifySelf="flex-end" />
-          <VStack spacing={8} top={-30} position='relative'>
-            <Box minH={650} maxH={600} overflowX='hidden' overflowY='auto'>
-            <SimpleGrid key={Math.random()} columns={4} spacingX={9}>
-              {board && displayBoard()}
-            </SimpleGrid>
+        <VStack minH="100vh" p={3}>
+          <HStack w='100%' justifyContent='space-between'>
+            <Tooltip label='Reset Deck' openDelay={300}>
+              <Button variant='ghost' onClick={resetDeck}>
+                <RepeatIcon />
+              </Button>
+            </Tooltip>
+            <Box>{deck?.length / 4} rows left</Box>
+            <Menu>
+              <MenuButton
+                as={IconButton}
+                aria-label='Options'
+                icon={<HamburgerIcon />}
+                variant='ghost'
+              />
+              <Portal>
+                <MenuList>
+                  <ColorModeSwitcher />
+                  {/*<MenuItem>
+                    <QuestionIcon />
+                    <Text ml={5}>
+                      How do I?
+                    </Text>
+                  </MenuItem>*/}
+                </MenuList>
+              </Portal>
+            </Menu>
+          </HStack>
+          <VStack>
+            <Box h={500} overflowX='hidden' overflowY='auto'>
+              <SimpleGrid key={Math.random()} columns={4} spacingX={[1, 9]}>
+                {board && displayBoard()}
+              </SimpleGrid>
             </Box>
-            <VStack>
-              <Button mr={5} onClick={() => drawRow()}>Get Next Row</Button>
-              <Text>{deck?.length / 4} rows left</Text>
-              <Text>{cleared} cards cleared</Text>
-              <Tooltip label='Reset Deck' openDelay={300}>
-                <Button variant='ghost' mt={5} onClick={resetDeck}>
-                  <RepeatIcon />
-                </Button>
-              </Tooltip>
-            </VStack>
+            <Button onClick={() => drawRow()}>Add Row</Button>
           </VStack>
-        </Grid>
+        </VStack>
       </Box>
     </ChakraProvider>
   );
