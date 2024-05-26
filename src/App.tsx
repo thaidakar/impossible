@@ -24,10 +24,12 @@ import {
   MenuList,
   MenuItem,
   Portal,
+  MenuDivider,
 } from "@chakra-ui/react";
 import { ColorModeSwitcher } from "./ColorModeSwitcher";
 import { GetNextCard, Card, suiteValues, cardValues, displayName, Suite, CardVal } from "./Logic/Deck";
 import { HamburgerIcon, QuestionIcon, RepeatIcon } from "@chakra-ui/icons";
+import { TutorialModal } from "./Components/TutorialModal";
 import './App.css';
 
 export const App = () => {
@@ -301,12 +303,8 @@ export const App = () => {
               <Portal>
                 <MenuList>
                   <ColorModeSwitcher />
-                  {/*<MenuItem>
-                    <QuestionIcon />
-                    <Text ml={5}>
-                      How do I?
-                    </Text>
-                  </MenuItem>*/}
+                  <MenuDivider />
+                  <TutorialModal />
                 </MenuList>
               </Portal>
             </Menu>
