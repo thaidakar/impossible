@@ -311,12 +311,12 @@ export const App = () => {
             </Menu>
           </HStack>
           <VStack>
-            <Box style={{ borderBottom: `${ board.length > 7 ? '2px solid black' : ''}`}} h={550} overflowX='hidden' overflowY='auto'>
+            <Box style={{ borderBottom: `${ board.length > 8 ? '2px solid black' : ''}`}} h={550} overflowX='hidden' overflowY='auto'>
               <SimpleGrid key={Math.random()} columns={4} spacingX={[1, 9]}>
                 {board && displayBoard()}
               </SimpleGrid>
             </Box>
-            <Button w='100%' onClick={() => drawRow()}>Add Row</Button>
+            <Button w='100%' onClick={() => drawRow()} isDisabled={deck?.length == 0}>{deck?.length > 0 ? 'Add Row' : cleared == 48 ? 'woo hoo!' : 'womp womp'}</Button>
           </VStack>
         </VStack>
       </Box>
