@@ -192,7 +192,7 @@ export const App = () => {
             return {...card, hidden: true};
           }
           else {
-            if (moveNext && canClick(ridx, cidx)) {
+            if (moveNext && ridx > 0 && canClick(ridx, cidx)) {
               mRidx = ridx;
               mCidx = cidx;
               setMoveNext.off();
@@ -259,7 +259,7 @@ export const App = () => {
             row.map((card, cidx) => 
               <CardElement 
                 style={{visibility: card.hidden && ridx !== 0 ? 'hidden' : 'visible', zIndex: ridx}} 
-                className={`${(ridx === 0 ? '': 'stacked')} ${ridx === 0 && !!card.hidden ? 'empty' : ''} card`}
+                className={`${(ridx === 0 ? '': 'stacked')} ${ridx === 0 && !!card.hidden ? 'empty' : ''} ${card.val === CardVal.Ace && ridx === 0 ? 'golden' : ''} card`}
                 w={[85, 90, 100]} h={130} p={0} 
                 key={card.suite + card.val}
                 onClick={(e) => cardClick(e, ridx, cidx)} 
@@ -282,7 +282,7 @@ export const App = () => {
   return (
     <ChakraProvider theme={theme}>
       <Box textAlign="center" fontSize="xl">
-        <VStack minH="100vh" p={3}>
+        <VStack minH="100vh" p={3} overflowY='hidden'>
           <HStack w='100%' justifyContent='space-between'>
             <Tooltip label='Reset Deck' openDelay={300}>
               <Button variant='ghost' onClick={resetDeck}>
@@ -311,7 +311,7 @@ export const App = () => {
             </Menu>
           </HStack>
           <VStack>
-            <Box h={500} overflowX='hidden' overflowY='auto'>
+            <Box style={{ borderBottom: `${ board.length > 7 ? '2px solid black' : ''}`}} h={500} overflowX='hidden' overflowY='auto'>
               <SimpleGrid key={Math.random()} columns={4} spacingX={[1, 9]}>
                 {board && displayBoard()}
               </SimpleGrid>
