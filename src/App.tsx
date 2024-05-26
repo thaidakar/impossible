@@ -214,7 +214,8 @@ export const App = () => {
 
   function canClick(ridx: number, cidx: number) {
     // Cannot click if there is a card below
-    if (ridx + 1 <= board[ridx].length - 1) {
+    debugger
+    if (ridx + 1 <= board.length - 1) {
       const cardBelow = board[ridx+1][cidx];
       if (!!cardBelow && !cardBelow.hidden) {
         return false;
