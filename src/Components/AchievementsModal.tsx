@@ -35,6 +35,7 @@ interface Achievements {
     LoseStreak?: number;
     ClearedFirstHand?: number;
     MaxColumns?: number;
+    AllStars?: boolean;
 }
 
 const achievements_key = 'achievements';
@@ -42,9 +43,9 @@ const achievements_key = 'achievements';
 export const AchievementsModal = (props: AchievementsProps) => {
     const { cleared, openColumns, reset, deckSize } = props;
     
+    const toast = useToast();
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [achievements, setAchievements] = useState<Achievements>();
-    const toast = useToast();
     const [gamesLost, setGamesLost] = useState(0);
     const [isFirstNewRow, setIsFirstNewRow] = useBoolean(true);
 
@@ -68,7 +69,7 @@ export const AchievementsModal = (props: AchievementsProps) => {
     }, [achievements]);
 
     useEffect(() => {
-        if (openColumns?.length > 0 && (!achievements?.ColsCleared || achievements.ColsCleared < openColumns.length)) {
+        if (safeCnt(achievements?.ColsCleared) < openColumns.length) {
             setTimeout(() => {
                 const newAchievement: Achievements = {
                     ...loadAchievements(),
@@ -89,7 +90,7 @@ export const AchievementsModal = (props: AchievementsProps) => {
             setTimeout(() => {
                 const newAchievement: Achievements = {
                     ...loadAchievements(),
-                    GamesWon: safeIncrement(achievements?.GamesWon)
+                    GamesWon: safeInc(achievements?.GamesWon)
                 };
 
                 setAchievements(newAchievement);
@@ -103,7 +104,7 @@ export const AchievementsModal = (props: AchievementsProps) => {
     }, [cleared]);
 
     useEffect(() => {
-        if (isFirstNewRow && cleared > 0 && (!achievements?.ClearedFirstHand || achievements.ClearedFirstHand < cleared)) {
+        if (isFirstNewRow && safeCnt(achievements?.ClearedFirstHand) < cleared) {
             setTimeout(() => {
                 const newAchievement: Achievements = {
                     ...loadAchievements(),
@@ -127,10 +128,10 @@ export const AchievementsModal = (props: AchievementsProps) => {
 
     useEffect(() => {
         if (reset && cleared < 48 && !!achievements) {
-            const newGamesLost = gamesLost + 1;
+            const newGamesLost = safeInc(gamesLost);
             setGamesLost(newGamesLost);
 
-            if (newGamesLost > (achievements.LoseStreak ?? 0)) {
+            if (newGamesLost >  safeCnt(achievements.LoseStreak)) {
                 setTimeout(() => {
                     const newAchievement: Achievements = {
                         ...loadAchievements(),
@@ -148,15 +149,19 @@ export const AchievementsModal = (props: AchievementsProps) => {
         toast({
             title: !!isComplete ? 'Maximum Achievement!' : 'New Achievement!',
             description: desc,
-            status: !!isComplete ? 'info' : 'success',
+            status: !!isComplete ? 'success' : 'info',
             duration: 9000,
             isClosable: true,
             icon: !!isComplete ? <CheckIcon /> : <StarIcon />
         });
     };
 
-    const safeIncrement = (toInc?: number) => {
+    const safeInc = (toInc?: number) => {
         return !!toInc ? toInc + 1 : 1;
+    }
+
+    const safeCnt = (l?: number) => {
+        return !!l ? l : 0;
     }
 
     const getCompStyle = (isMax: boolean) => {

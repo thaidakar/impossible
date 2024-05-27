@@ -322,7 +322,7 @@ export const App = () => {
                 {board && displayBoard()}
               </SimpleGrid>
             </Box>
-            <Button w='100%' onClick={() => drawRow()} isDisabled={deck?.length == 0}>{deck?.length > 0 ? 'Add Row' : cleared == 48 ? 'woo hoo!' : 'womp womp'}</Button>
+            <Button w='100%' py={7} onClick={() => drawRow()} isDisabled={deck?.length == 0}>{deck?.length > 0 ? 'Add Row' : cleared == 48 ? 'woo hoo!' : 'womp womp'}</Button>
           </VStack>
         </VStack>
       </Box>
