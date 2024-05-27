@@ -1,1 +1,1 @@
-This gane was introduced to me and I couldn't stop playing it, so I made a web version to save me time needing to shuffle. 
+This game was introduced to me and I couldn't stop playing it, so I made a web version to save me time needing to shuffle. 
