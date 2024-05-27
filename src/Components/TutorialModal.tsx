@@ -1,4 +1,4 @@
-import { QuestionOutlineIcon } from '@chakra-ui/icons';
+import { QuestionIcon } from '@chakra-ui/icons';
 import {
     Modal,
     ModalOverlay,
@@ -27,19 +27,19 @@ export const TutorialModal = () => {
     return (
         <>
             <MenuItem onClick={onOpen}>
-                <QuestionOutlineIcon />
+                <QuestionIcon />
                 <Text ml={5}>
                     Tutorial
                 </Text>
             </MenuItem>
             <Portal>
                 {isOpen &&
-                <Modal isOpen={isOpen} onClose={onClose} size={['sm', 'md']}>
+                <Modal isOpen={isOpen} onClose={onClose}>
                     <ModalOverlay />
                     <ModalContent>
                         <ModalHeader>Tutorial</ModalHeader>
                         <ModalCloseButton />
-                        <ModalBody>
+                        <ModalBody pb={10}>
                             <Accordion>
                                 <AccordionItem>
                                     <h2>
@@ -93,11 +93,6 @@ export const TutorialModal = () => {
                                 </AccordionItem>
                             </Accordion>
                         </ModalBody>
-                        <ModalFooter>
-                            <Button onClick={onClose}>
-                            Close
-                            </Button>
-                        </ModalFooter>
                     </ModalContent>
                 </Modal> 
                 }

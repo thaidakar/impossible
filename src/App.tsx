@@ -31,6 +31,7 @@ import { GetNextCard, Card, suiteValues, cardValues, displayName, Suite, CardVal
 import { HamburgerIcon, QuestionIcon, RepeatIcon } from "@chakra-ui/icons";
 import { TutorialModal } from "./Components/TutorialModal";
 import './App.css';
+import { AchievementsModal } from "./Components/AchievementsModal";
 
 export const App = () => {
 
@@ -59,7 +60,7 @@ export const App = () => {
   }, []);
 
   React.useEffect(() => {
-    if (!!addRow)
+    if (addRow)
       drawRow();
       setAddRow.off();
   }, [addRow]);
@@ -204,7 +205,7 @@ export const App = () => {
               setOpenColumns(c => c.filter(i => i != cidx));
               return card;
             }
-            console.warn('Cannot clear this card');
+            //console.warn('Cannot clear this card');
           }
         }
         return card;
@@ -220,7 +221,6 @@ export const App = () => {
 
   function canClick(ridx: number, cidx: number) {
     // Cannot click if there is a card below
-    debugger
     if (ridx + 1 <= board.length - 1) {
       const cardBelow = board[ridx+1][cidx];
       if (!!cardBelow && !cardBelow.hidden) {
@@ -243,7 +243,7 @@ export const App = () => {
     }
 
     if (openColIdx === undefined) {
-      console.warn("No open columns");
+      //console.warn("No open columns");
       return;
     }
 
@@ -290,8 +290,8 @@ export const App = () => {
   
   return (
     <ChakraProvider theme={theme}>
-      <Box textAlign="center" fontSize='xl' overflowY='hidden'> 
-        <VStack minH="100vh" p={3} overflowY='hidden'>
+      <Box textAlign='center' fontSize='xl' overflow='hidden'> 
+        <VStack minH='100vh' p={3} overflow='hidden'>
           <HStack w='100%' justifyContent='space-between'>
             <Tooltip label='Reset Deck' openDelay={300}>
               <Button variant='ghost' onClick={resetDeck}>
@@ -307,8 +307,10 @@ export const App = () => {
                 variant='ghost'
               />
               <Portal>
-                <MenuList>
+                <MenuList zIndex={1000}>
                   <ColorModeSwitcher />
+                  <MenuDivider />
+                  <AchievementsModal cleared={cleared} openColumns={openColumns} deckSize={deck.length} reset={reset} />
                   <MenuDivider />
                   <TutorialModal />
                 </MenuList>
