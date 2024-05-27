@@ -12,9 +12,7 @@ import {
   Card as CardElement,
   CardBody,
   SimpleGrid,
-  CardHeader,
   HStack,
-  Stack,
   StackItem,
   Tooltip,
   useBoolean,
@@ -22,13 +20,12 @@ import {
   Menu,
   IconButton,
   MenuList,
-  MenuItem,
   Portal,
   MenuDivider,
 } from "@chakra-ui/react";
 import { ColorModeSwitcher } from "./ColorModeSwitcher";
 import { GetNextCard, Card, suiteValues, cardValues, displayName, Suite, CardVal } from "./Logic/Deck";
-import { HamburgerIcon, QuestionIcon, RepeatIcon } from "@chakra-ui/icons";
+import { HamburgerIcon, RepeatIcon } from "@chakra-ui/icons";
 import { TutorialModal } from "./Components/TutorialModal";
 import './App.css';
 import { AchievementsModal } from "./Components/AchievementsModal";
@@ -202,7 +199,6 @@ export const App = () => {
             if (openColumns.length > 0 && ridx > 0 && canClick(ridx, cidx)) {
               mRidx = ridx;
               mCidx = cidx;
-              setOpenColumns(c => c.filter(i => i != cidx));
               return card;
             }
             //console.warn('Cannot clear this card');
@@ -249,13 +245,16 @@ export const App = () => {
 
     let _board = board.map((r, rowIndex) =>
       r.map((card, colIndex) => {
-          if (rowIndex === 0 && colIndex === openColIdx)
+          if (rowIndex === 0 && colIndex === openColIdx) {
+            setOpenColumns(openColumns.filter(i => i != openColIdx));
             return board[ridx][cidx]
+          }
           if (rowIndex === ridx && colIndex === cidx)
             return {...card, hidden: true};
           return card;
     }));
 
+    
     setBoard(_board);
   };
 
