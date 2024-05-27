@@ -39,7 +39,7 @@ export const App = () => {
   const [reset, setReset] = useBoolean(true);
   const [addRow, setAddRow] = useBoolean(false);
   const [cleared, setCleared] = React.useState(0);
-  const [moveNext, setMoveNext] = useBoolean(false);
+  const [openColumns, setOpenColumns] = React.useState<number[]>([]);
 
   React.useEffect(() => {
     const handleSpacebarPress = (event: KeyboardEvent) => {
@@ -75,6 +75,7 @@ export const App = () => {
       setReset.off();
       setDeck(_deck);
       setCleared(0);
+      setOpenColumns([]);
     };
     
     if (reset)
@@ -83,6 +84,7 @@ export const App = () => {
     return () => {
       setDeck([]);
       setBoard([]);
+      setOpenColumns([]);
     }
 
   }, [reset]);
@@ -109,7 +111,7 @@ export const App = () => {
 
   const drawRow = (_deck?: Card[], _board?: Card[][]) => {
     if (deck.length === 0) {
-      console.log("Deck is empty");
+      //console.log("Deck is empty");
       return;
     }
 
@@ -147,6 +149,7 @@ export const App = () => {
       _boardCopy.push(newRow);
     }
 
+    setOpenColumns([]);
     setDeck(_deck);
     setBoard(_boardCopy);
     _board.splice(0,_board.length)
@@ -190,14 +193,15 @@ export const App = () => {
         if (rowIndex === ridx && colIndex === cidx) {
           if (canRemove(card, ridx, cidx)) {
             setCleared(c => ++c);
-            if (ridx === 0) setMoveNext.on();
+            if (ridx === 0) 
+              setOpenColumns(c => [...c, cidx]);
             return {...card, hidden: true};
           }
           else {
-            if (moveNext && ridx > 0 && canClick(ridx, cidx)) {
+            if (openColumns.length > 0 && ridx > 0 && canClick(ridx, cidx)) {
               mRidx = ridx;
               mCidx = cidx;
-              setMoveNext.off();
+              setOpenColumns(c => c.filter(i => i != cidx));
               return card;
             }
             console.warn('Cannot clear this card');
@@ -227,6 +231,8 @@ export const App = () => {
   }
 
   const handleCardRightClick = (ridx: number, cidx: number) => {
+
+    if (ridx === 0) return;
 
     let openColIdx: number | undefined;
     for (let i = 0; i < 4; i++) {
@@ -292,7 +298,7 @@ export const App = () => {
                 <RepeatIcon />
               </Button>
             </Tooltip>
-            <Box>{deck?.length / 4} rows left</Box>
+            <Box>{deck?.length / 4} row{deck?.length / 4 === 1 ? '' : 's'} left</Box>
             <Menu>
               <MenuButton
                 as={IconButton}
