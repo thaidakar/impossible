@@ -273,7 +273,7 @@ export const App = () => {
                 onClick={(e) => cardClick(e, ridx, cidx)} 
                 onContextMenu={(e) => { e.preventDefault(); if (e.type === 'contextmenu') handleCardRightClick(ridx, cidx);}}>
                   <CardBody hidden={card.hidden} px={3} pt={2} className='card-body'>
-                    <HStack justifyContent={'space-between'} className={card.suite == Suite.Diamond || card.suite == Suite.Heart ? 'suite-r' : ''}>
+                    <HStack right={[7.7, .5]} className={ card.val === CardVal.Ten ? 'ten' : '' + ' ' + card.suite == Suite.Diamond || card.suite == Suite.Heart ? 'suite-r' : ''} justifyContent={ card.val === CardVal.Ten ? '' : 'space-between'}>
                       <StackItem>
                         {displayName(card.val)}
                       </StackItem>

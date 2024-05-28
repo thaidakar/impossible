@@ -18,7 +18,6 @@ import {
     Td,
     useBoolean
   } from '@chakra-ui/react';
-import { Card } from '../Logic/Deck';
 import { useEffect, useState } from 'react';
 
 
@@ -32,7 +31,7 @@ export interface AchievementsProps {
 interface Achievements {
     ColsCleared?: number;
     GamesWon?: number;
-    LoseStreak?: number;
+    GamesLost?: number;
     ClearedFirstHand?: number;
     MaxColumns?: number;
     AllStars?: boolean;
@@ -46,7 +45,6 @@ export const AchievementsModal = (props: AchievementsProps) => {
     const toast = useToast();
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [achievements, setAchievements] = useState<Achievements>();
-    const [gamesLost, setGamesLost] = useState(0);
     const [isFirstNewRow, setIsFirstNewRow] = useBoolean(true);
 
     const loadAchievements = () => {
@@ -98,8 +96,6 @@ export const AchievementsModal = (props: AchievementsProps) => {
                 if (newAchievement.GamesWon === 1) showToast('Win a game');
 
             }, 20);
-
-            setGamesLost(0);
         }
     }, [cleared]);
 
@@ -128,18 +124,14 @@ export const AchievementsModal = (props: AchievementsProps) => {
 
     useEffect(() => {
         if (reset && cleared < 48 && !!achievements) {
-            const newGamesLost = safeInc(gamesLost);
-            setGamesLost(newGamesLost);
+            setTimeout(() => {
+                const newAchievement: Achievements = {
+                    ...loadAchievements(),
+                    GamesLost: safeInc(achievements.GamesLost)
+                };
 
-            if (newGamesLost >  safeCnt(achievements.LoseStreak)) {
-                setTimeout(() => {
-                    const newAchievement: Achievements = {
-                        ...loadAchievements(),
-                        LoseStreak: newGamesLost
-                    };
-                    setAchievements(newAchievement);
-                }, 40);
-            }
+                setAchievements(newAchievement);
+            }, 40);
         } 
 
         setIsFirstNewRow.on();
@@ -188,20 +180,20 @@ export const AchievementsModal = (props: AchievementsProps) => {
                                     <Tbody>
                                         <Tr>
                                             <Td>Games Won</Td>
-                                            <Td isNumeric>{achievements?.GamesWon ?? 0}</Td>
+                                            <Td isNumeric>{safeCnt(achievements?.GamesWon)}</Td>
                                         </Tr>
                                         <Tr>
-                                            <Td>Longest Loss Streak</Td>
-                                            <Td isNumeric>{achievements?.LoseStreak ?? 0}</Td>
+                                            <Td>Games Lost</Td>
+                                            <Td isNumeric>{safeCnt(achievements?.GamesLost)}</Td>
                                         </Tr>
                                         <Tr style={getCompStyle(achievements?.ColsCleared === 3)}>
                                             <Td>Simultaneously Cleared Columns</Td>
-                                            <Td isNumeric>{achievements?.ColsCleared ?? 0} / 3</Td>
+                                            <Td isNumeric>{safeCnt(achievements?.ColsCleared)} / 3</Td>
                                         </Tr>
                                         
-                                        <Tr style={getCompStyle(achievements?.ClearedFirstHand === 15)}>
+                                        <Tr style={getCompStyle(safeCnt(achievements?.ClearedFirstHand) === 15)}>
                                             <Td>Cards cleared in the first hand</Td>
-                                            <Td isNumeric>{(achievements?.ClearedFirstHand ?? 0)} / 15</Td>
+                                            <Td isNumeric>{safeCnt(achievements?.ClearedFirstHand)} / 15</Td>
                                         </Tr>
                                     </Tbody>
                                 </Table>
