@@ -19,6 +19,7 @@ import {
     useBoolean
   } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
+import { Confetti } from './Confetti';
 
 
 export interface AchievementsProps {
@@ -46,6 +47,7 @@ export const AchievementsModal = (props: AchievementsProps) => {
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [achievements, setAchievements] = useState<Achievements>();
     const [isFirstNewRow, setIsFirstNewRow] = useBoolean(true);
+    const [throwConfetti, setThrowConfetti] = useBoolean(false);
 
     const loadAchievements = () => {
         const _achievements = localStorage.getItem(achievements_key);
@@ -84,7 +86,7 @@ export const AchievementsModal = (props: AchievementsProps) => {
     }, [openColumns]);
 
     useEffect(() => {
-        if (cleared === 48) {
+        if (cleared === 48 && openColumns.length === 0) {
             setTimeout(() => {
                 const newAchievement: Achievements = {
                     ...loadAchievements(),
@@ -95,9 +97,10 @@ export const AchievementsModal = (props: AchievementsProps) => {
 
                 if (newAchievement.GamesWon === 1) showToast('Win a game');
 
+                setThrowConfetti.on();
             }, 20);
         }
-    }, [cleared]);
+    }, [cleared, openColumns]);
 
     useEffect(() => {
         if (isFirstNewRow && safeCnt(achievements?.ClearedFirstHand) < cleared) {
@@ -142,7 +145,7 @@ export const AchievementsModal = (props: AchievementsProps) => {
             title: !!isComplete ? 'Maximum Achievement!' : 'New Achievement!',
             description: desc,
             status: !!isComplete ? 'success' : 'info',
-            duration: 9000,
+            duration: 9_000,
             isClosable: true,
             icon: !!isComplete ? <CheckIcon /> : <StarIcon />
         });
@@ -152,8 +155,8 @@ export const AchievementsModal = (props: AchievementsProps) => {
         return !!toInc ? toInc + 1 : 1;
     }
 
-    const safeCnt = (l?: number) => {
-        return !!l ? l : 0;
+    const safeCnt = (toCnt?: number) => {
+        return !!toCnt ? toCnt : 0;
     }
 
     const getCompStyle = (isMax: boolean) => {
@@ -201,6 +204,9 @@ export const AchievementsModal = (props: AchievementsProps) => {
                         </ModalBody>
                     </ModalContent>
                 </Modal> 
+            </Portal>
+            <Portal>
+                {throwConfetti && <Confetti onComplete={() => setThrowConfetti.off()} />}
             </Portal>
         </>
     );
