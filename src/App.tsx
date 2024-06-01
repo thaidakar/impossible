@@ -32,7 +32,7 @@ import { AchievementsModal } from "./Components/AchievementsModal";
 
 export const App = () => {
 
-  const [board, setBoard] = React.useState<Card[][]>([]);
+  const [board, setBoard] = React.useState<Card[][]>([[{ val: CardVal.Ace, suite: Suite.Spade, hidden: true},{ val: CardVal.Ace, suite: Suite.Spade, hidden: true},{ val: CardVal.Ace, suite: Suite.Spade, hidden: true},{ val: CardVal.Ace, suite: Suite.Spade, hidden: true}]]);
   const [deck, setDeck] = React.useState<Card[]>([]);
   const [reset, setReset] = useBoolean(true);
   const [addRow, setAddRow] = useBoolean(false);
@@ -75,6 +75,7 @@ export const App = () => {
       setDeck(_deck);
       setCleared(0);
       setOpenColumns([]);
+      setDoParty(0);
     };
     
     if (reset)
@@ -82,7 +83,6 @@ export const App = () => {
 
     return () => {
       setDeck([]);
-      setBoard([]);
       setOpenColumns([]);
     }
 
@@ -90,7 +90,7 @@ export const App = () => {
 
   React.useEffect(() => {
     // When the deck is full, display full board
-    if (deck.length == 52 && board.length == 0) {
+    if (deck.length == 52) {
       const _deck = [...deck];
       const _board: Card[][] = [];
       for (let i = 0; i < 4; i++) {
@@ -105,7 +105,6 @@ export const App = () => {
 
   const resetDeck = () => {
     setReset.on();
-    setBoard([]);
   }
 
   const drawRow = (_deck?: Card[], _board?: Card[][]) => {
@@ -304,7 +303,7 @@ export const App = () => {
                 <RepeatIcon />
               </Button>
             </Tooltip>
-            <Box>{deck?.length / 4} row{deck?.length / 4 === 1 ? '' : 's'} left</Box>
+            <Box>{deck?.length / 4 < 9 ? deck?.length / 4 : 9} row{deck?.length / 4 === 1 ? '' : 's'} left</Box>
             <Menu>
               <MenuButton
                 as={IconButton}

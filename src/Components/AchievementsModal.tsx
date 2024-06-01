@@ -210,7 +210,7 @@ export const AchievementsModal = (props: AchievementsProps) => {
             </Portal>
             <Portal>
                 {throwConfetti && <Confetti gamesWon={loadAchievements()?.GamesWon ?? 1} onComplete={() => setThrowConfetti.off()} />}
-                {doParty && <Confetti key={`party-${doParty}`} gamesWon={loadAchievements()?.GamesWon ?? 1} onComplete={() => setThrowConfetti.off()} />}
+                {!!doParty && <Confetti key={`party-${doParty}`} gamesWon={loadAchievements()?.GamesWon ?? 1} onComplete={() => setThrowConfetti.off()} />}
             </Portal>
         </>
     );
