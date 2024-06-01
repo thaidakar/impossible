@@ -1,7 +1,3 @@
-* {
-    user-select: none !important;
-}
-
 .card {
     border: 2px solid black !important;
 }
@@ -41,6 +37,8 @@
     cursor: pointer;
     outline-offset: 4px;
     transition: filter 250ms;
+    user-select: none !important;
+    -webkit-tap-highlight-color: transparent;
   }
   .shadow {
     position: absolute;

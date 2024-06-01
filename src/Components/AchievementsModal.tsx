@@ -29,6 +29,7 @@ export interface AchievementsProps {
     reset: boolean;
     deckSize: number;
     board: Card[][];
+    doParty: number;
 }
 
 interface Achievements {
@@ -43,7 +44,7 @@ interface Achievements {
 const achievements_key = 'achievements';
 
 export const AchievementsModal = (props: AchievementsProps) => {
-    const { cleared, openColumns, reset, deckSize, board } = props;
+    const { cleared, openColumns, reset, deckSize, board, doParty } = props;
     
     const toast = useToast();
     const { isOpen, onOpen, onClose } = useDisclosure();
@@ -88,7 +89,7 @@ export const AchievementsModal = (props: AchievementsProps) => {
     }, [openColumns]);
 
     useEffect(() => {
-        if (board?.at(0)?.every(x => x.val == CardVal.Ace) && board?.at(1)?.every(x => !!x.hidden) && cleared >= 48 && openColumns.length === 0) {
+        if (board.length == 1 && board?.at(0)?.every(x => x.val == CardVal.Ace) && cleared >= 48 && openColumns.length === 0) {
             setTimeout(() => {
                 const newAchievement: Achievements = {
                     ...loadAchievements(),
@@ -209,6 +210,7 @@ export const AchievementsModal = (props: AchievementsProps) => {
             </Portal>
             <Portal>
                 {throwConfetti && <Confetti gamesWon={loadAchievements()?.GamesWon ?? 1} onComplete={() => setThrowConfetti.off()} />}
+                {doParty && <Confetti key={`party-${doParty}`} gamesWon={loadAchievements()?.GamesWon ?? 1} onComplete={() => setThrowConfetti.off()} />}
             </Portal>
         </>
     );

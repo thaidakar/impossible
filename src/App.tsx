@@ -38,6 +38,7 @@ export const App = () => {
   const [addRow, setAddRow] = useBoolean(false);
   const [cleared, setCleared] = React.useState(0);
   const [openColumns, setOpenColumns] = React.useState<number[]>([]);
+  const [doParty, setDoParty] = React.useState(0);
 
   React.useEffect(() => {
     const handleSpacebarPress = (event: KeyboardEvent) => {
@@ -109,7 +110,8 @@ export const App = () => {
 
   const drawRow = (_deck?: Card[], _board?: Card[][]) => {
     if (deck.length === 0) {
-      //console.log("Deck is empty");
+      if (board.length == 1)
+        setDoParty(Math.random());
       return;
     }
 
@@ -212,6 +214,8 @@ export const App = () => {
       return;
     }
 
+    _board = _board.filter(x => !x.every(y => y.hidden));
+    
     setBoard(_board);
   };
 
@@ -254,6 +258,7 @@ export const App = () => {
           return card;
     }));
 
+    _board = _board.filter(x => !x.every(y => y.hidden));
     
     setBoard(_board);
   };
@@ -311,7 +316,7 @@ export const App = () => {
                 <MenuList zIndex={1000}>
                   <ColorModeSwitcher />
                   <MenuDivider />
-                  <AchievementsModal board={board} cleared={cleared} openColumns={openColumns} deckSize={deck.length} reset={reset} />
+                  <AchievementsModal doParty={doParty} board={board} cleared={cleared} openColumns={openColumns} deckSize={deck.length} reset={reset} />
                   <MenuDivider />
                   <TutorialModal />
                 </MenuList>
@@ -319,12 +324,12 @@ export const App = () => {
             </Menu>
           </HStack>
           <VStack>
-            <Box style={{ borderBottom: `${ board.length > 8 ? '2px solid black' : ''}`}} h={550} overflowX='hidden' overflowY='auto'>
+            <Box style={{ borderBottom: `${ board.length > 8 && !board?.at(7)?.every(x => x.hidden) ? '2px solid black' : ''}`}} h={550} overflowX='hidden' overflowY='auto'>
               <SimpleGrid key={Math.random()} columns={4} spacingX={[1, 9]}>
                 {board && displayBoard()}
               </SimpleGrid>
             </Box>
-            <button className='pushable' onClick={() => drawRow()} disabled={deck?.length == 0}>
+            <button className='pushable' onClick={() => drawRow()}>
               <span className="shadow"></span>
               <span className="edge"></span>
               <span className='front'>
