@@ -39,6 +39,7 @@ export const App = () => {
   const [cleared, setCleared] = React.useState(0);
   const [openColumns, setOpenColumns] = React.useState<number[]>([]);
   const [doParty, setDoParty] = React.useState(0);
+  const [isPageLoad, setIsPageLoad] = useBoolean(true);
 
   React.useEffect(() => {
     const handleSpacebarPress = (event: KeyboardEvent) => {
@@ -104,6 +105,8 @@ export const App = () => {
   }, [deck, board]);
 
   const resetDeck = () => {
+    if (isPageLoad)
+      setIsPageLoad.off();
     setReset.on();
   }
 
@@ -184,6 +187,10 @@ export const App = () => {
 
   const handleCardClick = (ridx: number, cidx: number) => {
 
+    if (!!board?.at(ridx)?.at(cidx)?.hidden) {
+      return;
+    }
+  
     let mRidx = -1;
     let mCidx = -1;
     
@@ -274,9 +281,9 @@ export const App = () => {
             row.map((card, cidx) => 
               <CardElement 
                 style={{visibility: card.hidden && ridx !== 0 ? 'hidden' : 'visible', zIndex: ridx}} 
-                className={`${(ridx === 0 ? '': 'stacked')} ${ridx === 0 && !!card.hidden ? 'empty' : ''} ${card.val === CardVal.Ace && ridx === 0 ? 'golden' : ''} card`}
+                className={`${(ridx === 0 ? '': 'stacked')} ${ridx === 0 && !!card.hidden ? 'empty' : ''} ${card.val === CardVal.Ace && ridx === 0 ? 'golden' : ''} ${!canClick(ridx,cidx) ? 'no-tap' : ''} card`}
                 w={[85, 90, 100]} h={130} p={0} 
-                key={card.suite + card.val}
+                key={card.suite + card.val + ridx + cidx}
                 onClick={(e) => cardClick(e, ridx, cidx)} 
                 onContextMenu={(e) => { e.preventDefault(); if (e.type === 'contextmenu') handleCardRightClick(ridx, cidx);}}>
                   <CardBody hidden={card.hidden} px={3} pt={2} className='card-body'>
@@ -298,11 +305,9 @@ export const App = () => {
       <Box textAlign='center' fontSize='xl' overflow='hidden'> 
         <VStack h='100%' p={3} overflow='hidden'>
           <HStack w='100%' justifyContent='space-between'>
-            <Tooltip label='Reset Deck' openDelay={300}>
-              <Button variant='ghost' onClick={resetDeck}>
-                <RepeatIcon />
-              </Button>
-            </Tooltip>
+            <Button variant='ghost' onClick={resetDeck} className='reset'>
+              <RepeatIcon key={`repeat-${reset}`} className={isPageLoad ? '' : 'rotating'} />
+            </Button>
             <Box>{deck?.length / 4 < 9 ? deck?.length / 4 : 9} row{deck?.length / 4 === 1 ? '' : 's'} left</Box>
             <Menu>
               <MenuButton
@@ -310,13 +315,14 @@ export const App = () => {
                 aria-label='Options'
                 icon={<HamburgerIcon />}
                 variant='ghost'
+                className='no-tap'
               />
               <Portal>
                 <MenuList zIndex={1000}>
                   <ColorModeSwitcher />
-                  <MenuDivider />
+                  <MenuDivider border='none' />
                   <AchievementsModal doParty={doParty} board={board} cleared={cleared} openColumns={openColumns} deckSize={deck.length} reset={reset} />
-                  <MenuDivider />
+                  <MenuDivider border='none'  />
                   <TutorialModal />
                 </MenuList>
               </Portal>
