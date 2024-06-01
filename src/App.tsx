@@ -270,7 +270,7 @@ export const App = () => {
             row.map((card, cidx) => 
               <CardElement 
                 style={{visibility: card.hidden && ridx !== 0 ? 'hidden' : 'visible', zIndex: ridx}} 
-                className={`${(ridx === 0 ? '': 'stacked')} ${ridx === 0 && !!card.hidden ? 'empty' : ''} ${card.val === CardVal.Ace && ridx === 0 ? 'golden' : ''} card`}
+                className={`${canClick(ridx, cidx) ? '': 'no-click'} ${(ridx === 0 ? '': 'stacked')} ${ridx === 0 && !!card.hidden ? 'empty' : ''} ${card.val === CardVal.Ace && ridx === 0 ? 'golden' : ''} card`}
                 w={[85, 90, 100]} h={130} p={0} 
                 key={card.suite + card.val}
                 onClick={(e) => cardClick(e, ridx, cidx)} 

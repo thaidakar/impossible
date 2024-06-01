@@ -1,5 +1,4 @@
 * {
-    -webkit-tap-highlight-color: transparent !important;
     user-select: none !important;
 }
 
@@ -30,6 +29,10 @@
 
 .golden {
     border: 2px solid rgb(211, 151, 1) !important;
+}
+
+.no-click {
+    -webkit-tap-highlight-color: transparent !important;
 }
 
 .pushable {
