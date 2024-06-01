@@ -88,7 +88,7 @@ export const AchievementsModal = (props: AchievementsProps) => {
     }, [openColumns]);
 
     useEffect(() => {
-        if (board?.at(0)?.every(x => x.val == CardVal.Ace) && cleared >= 48 && openColumns.length === 0) {
+        if (board?.at(0)?.every(x => x.val == CardVal.Ace) && board?.at(1)?.every(x => !!x.hidden) && cleared >= 48 && openColumns.length === 0) {
             setTimeout(() => {
                 const newAchievement: Achievements = {
                     ...loadAchievements(),

@@ -259,7 +259,10 @@ export const App = () => {
   };
 
   const cardClick = (e: React.MouseEvent, ridx: number, cidx: number) => {
-    if (e.type === 'click') handleCardClick(ridx, cidx);
+    if (e.type === 'click'){
+      e.preventDefault()
+      handleCardClick(ridx, cidx);
+    } 
   }
 
   const displayBoard = () => {
@@ -321,7 +324,13 @@ export const App = () => {
                 {board && displayBoard()}
               </SimpleGrid>
             </Box>
-            <Button w='100%' py={7} onClick={() => drawRow()} isDisabled={deck?.length == 0}>{deck?.length > 0 ? 'Add Row' : cleared == 48 ? 'woo hoo!' : 'womp womp'}</Button>
+            <button className='pushable' onClick={() => drawRow()} disabled={deck?.length == 0}>
+              <span className="shadow"></span>
+              <span className="edge"></span>
+              <span className='front'>
+                {deck?.length > 0 ? 'Add Row' : cleared == 48 ? 'woo hoo!' : 'womp womp'}
+              </span>
+            </button>
           </VStack>
         </VStack>
       </Box>
