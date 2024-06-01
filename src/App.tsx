@@ -308,7 +308,7 @@ export const App = () => {
                 <MenuList zIndex={1000}>
                   <ColorModeSwitcher />
                   <MenuDivider />
-                  <AchievementsModal cleared={cleared} openColumns={openColumns} deckSize={deck.length} reset={reset} />
+                  <AchievementsModal board={board} cleared={cleared} openColumns={openColumns} deckSize={deck.length} reset={reset} />
                   <MenuDivider />
                   <TutorialModal />
                 </MenuList>

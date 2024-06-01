@@ -20,6 +20,7 @@ import {
   } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import { Confetti } from './Confetti';
+import { Card, CardVal } from '../Logic/Deck';
 
 
 export interface AchievementsProps {
@@ -27,6 +28,7 @@ export interface AchievementsProps {
     openColumns: number[];
     reset: boolean;
     deckSize: number;
+    board: Card[][];
 }
 
 interface Achievements {
@@ -41,7 +43,7 @@ interface Achievements {
 const achievements_key = 'achievements';
 
 export const AchievementsModal = (props: AchievementsProps) => {
-    const { cleared, openColumns, reset, deckSize } = props;
+    const { cleared, openColumns, reset, deckSize, board } = props;
     
     const toast = useToast();
     const { isOpen, onOpen, onClose } = useDisclosure();
@@ -86,7 +88,7 @@ export const AchievementsModal = (props: AchievementsProps) => {
     }, [openColumns]);
 
     useEffect(() => {
-        if (cleared === 48 && openColumns.length === 0) {
+        if (board?.at(0)?.every(x => x.val == CardVal.Ace) && cleared >= 48 && openColumns.length === 0) {
             setTimeout(() => {
                 const newAchievement: Achievements = {
                     ...loadAchievements(),
@@ -100,7 +102,7 @@ export const AchievementsModal = (props: AchievementsProps) => {
                 setThrowConfetti.on();
             }, 20);
         }
-    }, [cleared, openColumns]);
+    }, [cleared, openColumns, board]);
 
     useEffect(() => {
         if (isFirstNewRow && safeCnt(achievements?.ClearedFirstHand) < cleared) {
@@ -206,7 +208,7 @@ export const AchievementsModal = (props: AchievementsProps) => {
                 </Modal> 
             </Portal>
             <Portal>
-                {throwConfetti && <Confetti onComplete={() => setThrowConfetti.off()} />}
+                {throwConfetti && <Confetti gamesWon={loadAchievements()?.GamesWon ?? 1} onComplete={() => setThrowConfetti.off()} />}
             </Portal>
         </>
     );

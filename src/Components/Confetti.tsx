@@ -3,11 +3,12 @@ import ReactConfetti from "react-confetti";
 
 interface ConfettiProps {
     onComplete: () => void;
+    gamesWon: number;
 }
 
 export const Confetti = (props: ConfettiProps) => {
 
-    const { onComplete } = props;
+    const { onComplete, gamesWon } = props;
 
     const [windowDimension, setDimension] = useState({width: window.innerWidth, height: window.innerHeight});
 
@@ -26,8 +27,8 @@ export const Confetti = (props: ConfettiProps) => {
             <ReactConfetti 
                 width={windowDimension.width}
                 height={windowDimension.height}
-                tweenDuration={1000}
-                numberOfPieces={200}
+                tweenDuration={5000}
+                numberOfPieces={200 + 10 * gamesWon}
                 recycle={false}
                 onConfettiComplete={onComplete}
             />
