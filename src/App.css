@@ -2,7 +2,7 @@
   user-select: none !important;
   -ms-overflow-style: none !important; /* IE and Edge */
   scrollbar-width: none !important; /* Firefox */
-  -webkit-tap-highlight-color: transparent;
+  -webkit-tap-highlight-color: transparent !important;
 }
 
 @keyframes pop {
@@ -23,6 +23,7 @@
 
 .card {
     border: 2px solid black !important;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .hide {

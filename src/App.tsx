@@ -265,11 +265,9 @@ export const App = () => {
 
   function getClass(card: Card, ridx: number, cidx: number) {
     let cardClass = 'card';
-
     if (selected?.ridx == ridx && selected?.cidx == cidx) {
       cardClass += ' selected';
     }
-
     if (ridx > 0) {
       cardClass += ' stacked';
 
@@ -286,11 +284,9 @@ export const App = () => {
         cardClass += ' golden';
       }
     }
-
     if (!canClick(ridx,cidx)) {
       cardClass += ' no-tap';
     }
-
     return cardClass;
   }
 
