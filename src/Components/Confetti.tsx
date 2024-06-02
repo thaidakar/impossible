@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import ReactConfetti from "react-confetti";
 import { Suite } from "../Logic/Deck";
+import { useColorMode } from "@chakra-ui/react";
 
 interface ConfettiProps {
     onComplete: () => void;
@@ -12,6 +13,7 @@ export const Confetti = (props: ConfettiProps) => {
     const { onComplete, gamesWon } = props;
 
     const [windowDimension, setDimension] = useState({width: window.innerWidth, height: window.innerHeight});
+    const { colorMode } = useColorMode();
 
     const detectSize = () => {
         setDimension({ width: window.innerWidth, height: window.innerHeight });
@@ -51,7 +53,7 @@ export const Confetti = (props: ConfettiProps) => {
                             suite = Suite.Spade;
                             break;
                     }
-                    ctx.fillStyle = suite == Suite.Diamond || suite == Suite.Heart ? '#DB1424' : 'black';
+                    ctx.fillStyle = suite == Suite.Diamond || suite == Suite.Heart ? '#DB1424' : colorMode === 'dark' ? 'white' : 'black';
                     ctx.fillText(suite, 0, 0);
                 }}
             />
