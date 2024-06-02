@@ -32,7 +32,7 @@
 
 @keyframes selected {
   0% {
-    transform: scale(.98);
+    transform: scale(.97);
   }
   100% {
     transform: scale(1);
@@ -40,7 +40,7 @@
 }
 
 .selected {
-  animation: selected .25s forwards 1;
+  animation: selected .3s forwards 1;
 }
 
 .stacked {
