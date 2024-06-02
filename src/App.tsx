@@ -198,10 +198,9 @@ export const App = () => {
       return;
     }
 
-    setSelected({ridx: ridx, cidx: cidx});
-
     // No point checking if we can't click it...
     if (!canClick(ridx, cidx)) {
+      setSelected({ridx: ridx, cidx: cidx});
       return;
     }
 
