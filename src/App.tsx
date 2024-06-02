@@ -343,7 +343,7 @@ export const App = () => {
             </Menu>
           </HStack>
           <VStack>
-            <Box style={{ borderBottom: `${ board.length > 8 && !board?.at(7)?.every(x => x.hidden) ? '2px solid black' : ''}`}} h={550} overflowX='hidden' overflowY='auto'>
+            <Box style={{ borderBottom: `${ board.length > 7 ? '2px solid black' : ''}`}} h={500} overflowX='hidden' overflowY='auto'>
               <SimpleGrid key={Math.random()} columns={4} spacingX={[1, 9]}>
                 {board && displayBoard()}
               </SimpleGrid>

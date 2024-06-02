@@ -32,9 +32,6 @@
 
 @keyframes selected {
   0% {
-    transform: scale(1);
-  }
-  50% {
     transform: scale(.98);
   }
   100% {
@@ -44,6 +41,14 @@
 
 .selected {
   animation: selected .25s forwards 1;
+}
+
+.card:active {
+    scale: .98;
+
+    &::after {
+      scale: 1;
+    }
 }
 
 .stacked {
@@ -65,6 +70,7 @@
 .empty {
     background-color: transparent !important;
     border: 2px dotted black !important;
+    scale: 1 !important;
 }
 
 .golden {
