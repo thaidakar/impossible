@@ -11,7 +11,7 @@
 }
 
 .card:active {
-  scale: .95;
+  scale: .97;
 }
 
 .hide {
@@ -20,7 +20,7 @@
 
 @keyframes selected {
   0% {
-    transform: scale(.95);
+    transform: scale(.97);
   }
   100% {
     transform: scale(1);
