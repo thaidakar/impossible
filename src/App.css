@@ -27,7 +27,9 @@
   }
 }
 .selected {
-  animation: selected .1s forwards 1;
+  &:not(.hide) {
+    animation: selected .1s forwards 1;
+  }
 }
 
 .stacked {

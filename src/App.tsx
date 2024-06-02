@@ -226,6 +226,7 @@ export const App = () => {
     if (!!board?.at(ridx)?.at(cidx)?.hidden) {
       return false;
     }
+    
     // Cannot click if there is a card below
     if (ridx + 1 <= board.length - 1) {
       const cardBelow = board[ridx+1][cidx];
@@ -233,6 +234,7 @@ export const App = () => {
         return false;
       }
     }
+
     return true;
   }
 
