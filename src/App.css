@@ -43,14 +43,6 @@
   animation: selected .25s forwards 1;
 }
 
-.card:active {
-    scale: .98;
-
-    &::after {
-      scale: 1;
-    }
-}
-
 .stacked {
     margin-top: -70px;
 }
