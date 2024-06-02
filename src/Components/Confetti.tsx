@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import ReactConfetti from "react-confetti";
+import { Suite } from "../Logic/Deck";
 
 interface ConfettiProps {
     onComplete: () => void;
@@ -28,9 +29,31 @@ export const Confetti = (props: ConfettiProps) => {
                 width={windowDimension.width}
                 height={windowDimension.height}
                 tweenDuration={5000}
-                numberOfPieces={200 + 10 * gamesWon}
+                numberOfPieces={400 + 10 * gamesWon}
+                colors={['#f44336','#e91e63','#9c27b0','#673ab7']}
                 recycle={false}
                 onConfettiComplete={onComplete}
+                drawShape={ctx => {
+                    const scale = 3;
+                    ctx.scale(scale, scale);
+                    let suite = Suite.Spade;
+                    switch (ctx.fillStyle) {
+                        case '#f44336':
+                            suite = Suite.Club;
+                            break;
+                        case '#e91e63':
+                            suite = Suite.Diamond;
+                            break;
+                        case '#9c27b0':
+                            suite = Suite.Heart;
+                            break;
+                        case '#673ab7':
+                            suite = Suite.Spade;
+                            break;
+                    }
+                    ctx.fillStyle = suite == Suite.Diamond || suite == Suite.Heart ? '#DB1424' : 'black';
+                    ctx.fillText(suite, 0, 0);
+                }}
             />
         </>
     );
