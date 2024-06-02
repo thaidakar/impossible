@@ -2,7 +2,7 @@
   user-select: none !important;
   -ms-overflow-style: none !important; /* IE and Edge */
   scrollbar-width: none !important; /* Firefox */
-  -webkit-tap-highlight-color: transparent !important;
+  -webkit-tap-highlight-color: transparent;
 }
 
 @keyframes pop {
