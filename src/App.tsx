@@ -207,6 +207,7 @@ export const App = () => {
     let boardCopy = [...board];    
     if (canRemove(boardCopy[ridx][cidx], ridx, cidx)) {
       boardCopy[ridx][cidx].hidden = true;
+      boardCopy = boardCopy.filter(x => !x.every(y => y.hidden));
       setCleared(c => ++c);
       setBoard(boardCopy);
       if (ridx === 0) {
