@@ -226,7 +226,7 @@ export const App = () => {
     if (!!board?.at(ridx)?.at(cidx)?.hidden) {
       return false;
     }
-    
+
     // Cannot click if there is a card below
     if (ridx + 1 <= board.length - 1) {
       const cardBelow = board[ridx+1][cidx];
@@ -251,7 +251,6 @@ export const App = () => {
     let boardCopy = [...board];
     boardCopy[0][openColIdx] = {...board[ridx][cidx]};
     boardCopy[ridx][cidx].hidden = true;
-    
     boardCopy = boardCopy.filter(x => !x.every(y => y.hidden));
     
     setOpenColumns(openColumns.filter(i => i != openColIdx));
