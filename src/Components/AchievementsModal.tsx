@@ -51,6 +51,7 @@ export const AchievementsModal = (props: AchievementsProps) => {
     const [achievements, setAchievements] = useState<Achievements>();
     const [isFirstNewRow, setIsFirstNewRow] = useBoolean(true);
     const [throwConfetti, setThrowConfetti] = useBoolean(false);
+    const [winLock, setWinLock] = useBoolean(false);
 
     const loadAchievements = () => {
         const _achievements = localStorage.getItem(achievements_key);
@@ -89,7 +90,8 @@ export const AchievementsModal = (props: AchievementsProps) => {
     }, [openColumns]);
 
     useEffect(() => {
-        if (board.length == 1 && board?.at(0)?.every(x => x.val == CardVal.Ace) && cleared >= 48 && openColumns.length === 0) {
+        if (board.length == 1 && board?.at(0)?.every(x => x.val == CardVal.Ace) && cleared === 48 && openColumns.length === 0 && !winLock) {
+            setWinLock.on();
             setTimeout(() => {
                 const newAchievement: Achievements = {
                     ...loadAchievements(),
@@ -141,6 +143,7 @@ export const AchievementsModal = (props: AchievementsProps) => {
         } 
 
         setIsFirstNewRow.on();
+        setWinLock.off();
     }, [reset]);
 
     const showToast = (desc: string, isComplete?: boolean) => {

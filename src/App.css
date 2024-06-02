@@ -1,9 +1,47 @@
 * {
   user-select: none !important;
+  -ms-overflow-style: none !important; /* IE and Edge */
+  scrollbar-width: none !important; /* Firefox */
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+.pop {
+  animation: pop .5s forwards 1;
 }
 
 .card {
     border: 2px solid black !important;
+}
+
+.hide {
+  visibility: hidden;
+}
+
+@keyframes selected {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(.98);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.selected {
+  animation: selected .25s forwards 1;
 }
 
 .stacked {
@@ -15,7 +53,7 @@
 }
 
 .suite-r {
-    color: #db1424;
+    color: rgb(219, 20, 36);
 }
 
 .card-body {
@@ -79,7 +117,7 @@
     border-radius: 12px;
     font-size: 1.25rem;
     color: white;
-    background: hsl(345deg 100% 47%);
+    background: rgb(219, 20, 36);
     will-change: transform;
     transform: translateY(-4px);
     transition:
@@ -87,10 +125,7 @@
       600ms
       cubic-bezier(.3, .7, .4, 1);
   }
-  .pushable:hover {
-    filter: brightness(110%);
-  }
-  .pushable:hover .front {
+  .pushable .front {
     transform: translateY(-6px);
     transition:
       transform
@@ -101,7 +136,7 @@
     transform: translateY(-2px);
     transition: transform 34ms;
   }
-  .pushable:hover .shadow {
+  .pushable .shadow {
     transform: translateY(4px);
     transition:
       transform
@@ -117,11 +152,16 @@
   }
 
   @keyframes rotating {
-    from {
-      transform: rotate(180deg);
+    0% {
+      transform: rotate(360deg);
+      scale: 1;
     }
-    to {
+    50% {
+      scale: 1.3;
+    }
+    100% {
       transform: rotate(0deg);
+      scale: 1;
     }
   }
 

@@ -27,8 +27,13 @@ import { ColorModeSwitcher } from "./ColorModeSwitcher";
 import { GetNextCard, Card, suiteValues, cardValues, displayName, Suite, CardVal } from "./Logic/Deck";
 import { HamburgerIcon, RepeatIcon } from "@chakra-ui/icons";
 import { TutorialModal } from "./Components/TutorialModal";
-import './App.css';
 import { AchievementsModal } from "./Components/AchievementsModal";
+import './App.css';
+
+interface SelectedCard {
+  ridx?: number;
+  cidx?: number;
+}
 
 export const App = () => {
 
@@ -40,6 +45,7 @@ export const App = () => {
   const [openColumns, setOpenColumns] = React.useState<number[]>([]);
   const [doParty, setDoParty] = React.useState(0);
   const [isPageLoad, setIsPageLoad] = useBoolean(true);
+  const [selected, setSelected] = React.useState<SelectedCard>();
 
   React.useEffect(() => {
     const handleSpacebarPress = (event: KeyboardEvent) => {
@@ -187,45 +193,39 @@ export const App = () => {
 
   const handleCardClick = (ridx: number, cidx: number) => {
 
+    // Don't show selected animation for the empty columns
     if (!!board?.at(ridx)?.at(cidx)?.hidden) {
       return;
     }
-  
-    let mRidx = -1;
-    let mCidx = -1;
-    
-    let _board = board.map((r, rowIndex) =>
-    r.map((card, colIndex) => {
-        if (rowIndex === ridx && colIndex === cidx) {
-          if (canRemove(card, ridx, cidx)) {
-            setCleared(c => ++c);
-            if (ridx === 0) 
-              setOpenColumns(c => [...c, cidx]);
-            return {...card, hidden: true};
-          }
-          else {
-            if (openColumns.length > 0 && ridx > 0 && canClick(ridx, cidx)) {
-              mRidx = ridx;
-              mCidx = cidx;
-              return card;
-            }
-            //console.warn('Cannot clear this card');
-          }
-        }
-        return card;
-    }));
 
-    if (mRidx > -1 && mCidx > -1) {
-      handleCardRightClick(mRidx, mCidx);
+    setSelected({ridx: ridx, cidx: cidx});
+
+    // No point checking if we can't click it...
+    if (!canClick(ridx, cidx)) {
       return;
     }
 
-    _board = _board.filter(x => !x.every(y => y.hidden));
-    
-    setBoard(_board);
+    let boardCopy = [...board];    
+    if (canRemove(boardCopy[ridx][cidx], ridx, cidx)) {
+      boardCopy[ridx][cidx].hidden = true;
+      setCleared(c => ++c);
+      setBoard(boardCopy);
+      if (ridx === 0) {
+        setOpenColumns(c => [...c, cidx]);
+      }
+      return;
+    }
+    else if (openColumns?.length > 0) {
+      handleCardRightClick(ridx, cidx);
+      return;
+    }
   };
 
   function canClick(ridx: number, cidx: number) {
+    // Cannot click if hidden
+    if (!!board?.at(ridx)?.at(cidx)?.hidden) {
+      return false;
+    }
     // Cannot click if there is a card below
     if (ridx + 1 <= board.length - 1) {
       const cardBelow = board[ridx+1][cidx];
@@ -240,33 +240,20 @@ export const App = () => {
 
     if (ridx === 0) return;
 
-    let openColIdx: number | undefined;
-    for (let i = 0; i < 4; i++) {
-      if (!!board[0][i].hidden) {
-        openColIdx = i;
-        break;
-      }
-    }
-
+    const openColIdx = openColumns?.at(0);
     if (openColIdx === undefined) {
-      //console.warn("No open columns");
+      // No open columns
       return;
     }
 
-    let _board = board.map((r, rowIndex) =>
-      r.map((card, colIndex) => {
-          if (rowIndex === 0 && colIndex === openColIdx) {
-            setOpenColumns(openColumns.filter(i => i != openColIdx));
-            return board[ridx][cidx]
-          }
-          if (rowIndex === ridx && colIndex === cidx)
-            return {...card, hidden: true};
-          return card;
-    }));
-
-    _board = _board.filter(x => !x.every(y => y.hidden));
+    let boardCopy = [...board];
+    boardCopy[0][openColIdx] = {...board[ridx][cidx]};
+    boardCopy[ridx][cidx].hidden = true;
     
-    setBoard(_board);
+    boardCopy = boardCopy.filter(x => !x.every(y => y.hidden));
+    
+    setOpenColumns(openColumns.filter(i => i != openColIdx));
+    setBoard(boardCopy);
   };
 
   const cardClick = (e: React.MouseEvent, ridx: number, cidx: number) => {
@@ -276,12 +263,43 @@ export const App = () => {
     } 
   }
 
+  function getClass(card: Card, ridx: number, cidx: number) {
+    let cardClass = 'card';
+
+    if (selected?.ridx == ridx && selected?.cidx == cidx) {
+      cardClass += ' selected';
+    }
+
+    if (ridx > 0) {
+      cardClass += ' stacked';
+
+      if (!!card.hidden) {
+        cardClass += ' hide';
+      }
+    }
+    else {
+      if (!!card.hidden) {
+        cardClass += ' empty';
+      }
+
+      if (card.val === CardVal.Ace) {
+        cardClass += ' golden';
+      }
+    }
+
+    if (!canClick(ridx,cidx)) {
+      cardClass += ' no-tap';
+    }
+
+    return cardClass;
+  }
+
   const displayBoard = () => {
     return board.map((row, ridx) => 
             row.map((card, cidx) => 
               <CardElement 
-                style={{visibility: card.hidden && ridx !== 0 ? 'hidden' : 'visible', zIndex: ridx}} 
-                className={`${(ridx === 0 ? '': 'stacked')} ${ridx === 0 && !!card.hidden ? 'empty' : ''} ${card.val === CardVal.Ace && ridx === 0 ? 'golden' : ''} ${!canClick(ridx,cidx) ? 'no-tap' : ''} card`}
+                style={{zIndex: ridx}} 
+                className={getClass(card, ridx, cidx)}
                 w={[85, 90, 100]} h={130} p={0} 
                 key={card.suite + card.val + ridx + cidx}
                 onClick={(e) => cardClick(e, ridx, cidx)} 
