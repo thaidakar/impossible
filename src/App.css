@@ -2,6 +2,7 @@
   user-select: none !important;
   -ms-overflow-style: none !important; /* IE and Edge */
   scrollbar-width: none !important; /* Firefox */
+  -webkit-tap-highlight-color: transparent !important;
 }
 
 @keyframes pop {
@@ -171,8 +172,4 @@
 
   .reset {
     background: none !important;
-  }
-
-  .no-tap,.reset,.pushable {
-    -webkit-tap-highlight-color: transparent;
   }
