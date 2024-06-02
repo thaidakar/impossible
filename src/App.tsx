@@ -323,7 +323,7 @@ export const App = () => {
             <Button variant='ghost' onClick={resetDeck} className='reset'>
               <RepeatIcon key={`repeat-${reset}`} className={isPageLoad ? '' : 'rotating'} />
             </Button>
-            <Box>{deck?.length / 4 < 9 ? deck?.length / 4 : 9} row{deck?.length / 4 === 1 ? '' : 's'} left</Box>
+            <Box className='rows-left'>{deck?.length / 4 < 9 ? deck?.length / 4 : 9} row{deck?.length / 4 === 1 ? '' : 's'} left</Box>
             <Menu>
               <MenuButton
                 as={IconButton}
