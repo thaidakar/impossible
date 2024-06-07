@@ -29,10 +29,12 @@ import { HamburgerIcon, RepeatIcon } from "@chakra-ui/icons";
 import { TutorialModal } from "./Components/TutorialModal";
 import { AchievementsModal } from "./Components/AchievementsModal";
 import './App.css';
+import { FaUndo } from "react-icons/fa";
 
-interface SelectedCard {
-  ridx?: number;
-  cidx?: number;
+interface UndoState {
+  board: Card[][];
+  deck: Card[];
+  openColumns: number[];
 }
 
 export const App = () => {
@@ -43,9 +45,13 @@ export const App = () => {
   const [addRow, setAddRow] = useBoolean(false);
   const [cleared, setCleared] = React.useState(0);
   const [openColumns, setOpenColumns] = React.useState<number[]>([]);
-  const [doParty, setDoParty] = React.useState(0);
   const [isPageLoad, setIsPageLoad] = useBoolean(true);
-  const [selected, setSelected] = React.useState<SelectedCard>();
+  const [doParty, setDoParty] = React.useState(0);
+  const [undo, setUndo] = useBoolean(false);
+  const [undoState, setUndoState] = React.useState<UndoState | undefined>();
+  const [undoRow, setUndoRow] = React.useState<Card[] | undefined>();
+  const [addUndoRow, setAddUndoRow] = useBoolean(false);
+  const [hasUndone, setHasUndone] = useBoolean(false);
 
   React.useEffect(() => {
     const handleSpacebarPress = (event: KeyboardEvent) => {
@@ -65,9 +71,34 @@ export const App = () => {
   }, []);
 
   React.useEffect(() => {
-    if (addRow)
-      drawRow();
+    if (addRow) {
       setAddRow.off();
+
+      copyToUndoState();
+      let _undoRow = undefined;
+      if (addUndoRow && !!undoRow) {
+        
+        let doUn = true;
+        for (let j = 0; j < board.length; j++) {
+          for (let i = 0; i < board[j].length; i++) {
+            const card = board[j][i]
+            if (!!undoRow.find(c => c.suite == card.suite && c.val == card.val)) {
+              doUn = false;
+              break;
+            }
+          }
+        }
+        
+        if (doUn) {
+          _undoRow = undoRow;
+          setAddUndoRow.off();
+        }
+      }
+      
+      const row = drawRow(undefined, undefined, _undoRow);
+      
+      setUndoRow([...row]);
+    }
   }, [addRow]);
 
   React.useEffect(() => {
@@ -83,6 +114,9 @@ export const App = () => {
       setCleared(0);
       setOpenColumns([]);
       setDoParty(0);
+      setUndoState(undefined);
+      setUndoRow(undefined);
+      setAddUndoRow.off();
     };
     
     if (reset)
@@ -108,30 +142,62 @@ export const App = () => {
     if (deck.length === 0 && board.length === 0 && !reset) {
       setReset.on();
     }
+
   }, [deck, board]);
 
+  React.useEffect(() => {
+    if (undo) {
+      setUndo.off();
+
+      if (!hasUndone) setHasUndone.on();
+
+      if (!!undoState) {
+        setAddUndoRow.on();
+
+        setBoard(undoState.board);
+        setDeck(undoState.deck);
+        setOpenColumns(undoState.openColumns);
+
+        setUndoState(undefined);
+      }
+    }
+
+  }, [undo, undoState]);
+
   const resetDeck = () => {
-    if (isPageLoad)
+    if (isPageLoad) {
       setIsPageLoad.off();
+    }
     setReset.on();
   }
 
-  const drawRow = (_deck?: Card[], _board?: Card[][]) => {
+  const drawRow = (_deck?: Card[], _board?: Card[][], _row?: Card[]) => {
     if (deck.length === 0) {
       if (board.length == 1)
         setDoParty(Math.random());
-      return;
+      return [];
     }
 
     if (_deck === undefined) _deck = [...deck];
-    const row: Card[] = [];
-    for (let i = 0; i < 4; i++) {
-      const {idx, card} = GetNextCard(_deck);
-      if (idx != undefined && card != undefined) {
-        row.push(card);
-        _deck.splice(idx,1);
+
+    let row: Card[] = [];
+    if (!!_row) {
+      row = [..._row];
+      for (let i = 0; i < 4; i++) {
+        const curCard = row[i];
+        const idx = _deck.findIndex(x => x.suite == curCard.suite && x.val == curCard.val);
+        _deck.splice(idx, 1);
       }
-      else break; // Deck is empty
+    }
+    else {
+      for (let i = 0; i < 4; i++) {
+        const {idx, card} = GetNextCard(_deck);
+        if (idx != undefined && card != undefined) {
+          row.push(card);
+          _deck.splice(idx, 1);
+        }
+        else break; // Deck is empty
+      }
     }
 
     const colComp: number[] = [];
@@ -160,8 +226,10 @@ export const App = () => {
     setOpenColumns([]);
     setDeck(_deck);
     setBoard(_boardCopy);
-    _board.splice(0,_board.length)
-    _board.push(..._boardCopy)
+    _board.splice(0,_board.length);
+    _board.push(..._boardCopy);
+
+    return row;
   };
 
   const canRemove = (card: Card, ridx: number, cidx: number) => {
@@ -191,8 +259,30 @@ export const App = () => {
     return false;
   }
 
-  const handleCardClick = (ridx: number, cidx: number) => {
+  const copyToUndoState = () => {
+    const _boardCopy: Card[][] = [];
+    const _deckCopy: Card[] = [...deck];
+    const _openColumnsCopy: number[] = [...openColumns];
 
+    for (let i = 0; i < board.length; i++) {
+      const row = [];
+      for (let j = 0; j < board[i].length; j++) {
+        const crd: Card = {
+          ...board[i][j]
+        }
+        row.push(crd);
+      }
+      _boardCopy.push(row);
+    }
+
+    setUndoState({
+      board: _boardCopy,
+      deck: _deckCopy,
+      openColumns: _openColumnsCopy
+    });
+  };
+
+  const handleCardClick = (ridx: number, cidx: number) => {
     // Don't show selected animation for the empty columns
     if (!!board?.at(ridx)?.at(cidx)?.hidden) {
       return;
@@ -200,12 +290,13 @@ export const App = () => {
 
     // No point checking if we can't click it...
     if (!canClick(ridx, cidx)) {
-      setSelected({ridx: ridx, cidx: cidx});
       return;
     }
 
     let boardCopy = [...board];    
     if (canRemove(boardCopy[ridx][cidx], ridx, cidx)) {
+      copyToUndoState();
+
       boardCopy[ridx][cidx].hidden = true;
       boardCopy = boardCopy.filter(x => !x.every(y => y.hidden));
       setCleared(c => ++c);
@@ -248,6 +339,8 @@ export const App = () => {
       return;
     }
 
+    copyToUndoState();
+
     let boardCopy = [...board];
     boardCopy[0][openColIdx] = {...board[ridx][cidx]};
     boardCopy[ridx][cidx].hidden = true;
@@ -266,9 +359,7 @@ export const App = () => {
 
   function getClass(card: Card, ridx: number, cidx: number) {
     let cardClass = 'card';
-    if (selected?.ridx == ridx && selected?.cidx == cidx) {
-      cardClass += ' selected';
-    }
+
     if (ridx > 0) {
       cardClass += ' stacked';
 
@@ -302,7 +393,8 @@ export const App = () => {
                 onClick={(e) => cardClick(e, ridx, cidx)} 
                 onContextMenu={(e) => { e.preventDefault(); if (e.type === 'contextmenu') handleCardRightClick(ridx, cidx);}}>
                   <CardBody hidden={card.hidden} px={3} pt={2} className='card-body'>
-                    <HStack right={[7.7, .5]} className={card.suite == Suite.Diamond || card.suite == Suite.Heart ? 'suite-r' : ''} justifyContent={ card.val === CardVal.Ten ? '' : 'space-between'} style={{ position: card.val === CardVal.Ten ? 'relative' : 'inherit'}}>                      <StackItem>
+                    <HStack right={[7.7, 0]} className={card.suite == Suite.Diamond || card.suite == Suite.Heart ? 'suite-r' : ''} justifyContent='space-between' style={{ position: card.val === CardVal.Ten ? 'relative' : 'inherit'}}>                      
+                      <StackItem>
                         {displayName(card.val)}
                       </StackItem>
                       <StackItem>
@@ -323,7 +415,9 @@ export const App = () => {
             <Button variant='ghost' onClick={resetDeck} className='reset'>
               <RepeatIcon key={`repeat-${reset}`} className={isPageLoad ? '' : 'rotating'} />
             </Button>
-            <Box className='rows-left'>{deck?.length / 4 < 9 ? deck?.length / 4 : 9} row{deck?.length / 4 === 1 ? '' : 's'} left</Box>
+            <Button isDisabled={!undoState} variant='ghost' className='reset' onClick={setUndo.on}>
+              <FaUndo size='14' key={`undo-${undo}`} className={!hasUndone ? '' : 'rotating'} />
+            </Button>
             <Menu>
               <MenuButton
                 as={IconButton}
@@ -345,15 +439,15 @@ export const App = () => {
           </HStack>
           <VStack>
             <Box style={{ borderBottom: `${ board.length > 7 ? '2px solid black' : ''}`}} h={500} overflowX='hidden' overflowY='auto'>
-              <SimpleGrid key={Math.random()} columns={4} spacingX={[1, 9]}>
+              <SimpleGrid key={Math.random()} columns={4} spacingX={1}>
                 {board && displayBoard()}
               </SimpleGrid>
             </Box>
-            <button className='pushable' onClick={() => drawRow()}>
+            <button className='pushable' onClick={setAddRow.on}>
               <span className="shadow"></span>
               <span className="edge"></span>
               <span className='front'>
-                {deck?.length > 0 ? 'Add Row' : cleared == 48 ? 'woo hoo!' : 'womp womp'}
+                {deck?.length > 0 ? `${deck?.length / 4 < 9 ? deck?.length / 4 : 9} row${deck?.length / 4 === 1 ? '' : 's'} left` : cleared == 48 ? 'woo hoo!' : 'womp womp'}
               </span>
             </button>
           </VStack>
