@@ -74,30 +74,33 @@ export const App = () => {
     if (addRow) {
       setAddRow.off();
 
-      copyToUndoState();
-      let _undoRow = undefined;
-      if (addUndoRow && !!undoRow) {
-        
-        let doUn = true;
-        for (let j = 0; j < board.length; j++) {
-          for (let i = 0; i < board[j].length; i++) {
-            const card = board[j][i]
-            if (!!undoRow.find(c => c.suite == card.suite && c.val == card.val)) {
-              doUn = false;
-              break;
+      if (deck?.length > 0) {
+
+        copyToUndoState();
+        let _undoRow = undefined;
+        if (addUndoRow && !!undoRow) {
+          
+          let doUn = true;
+          for (let j = 0; j < board.length; j++) {
+            for (let i = 0; i < board[j].length; i++) {
+              const card = board[j][i]
+              if (!!undoRow.find(c => c.suite == card.suite && c.val == card.val)) {
+                doUn = false;
+                break;
+              }
             }
+          }
+          
+          if (doUn) {
+            _undoRow = undoRow;
+            setAddUndoRow.off();
           }
         }
         
-        if (doUn) {
-          _undoRow = undoRow;
-          setAddUndoRow.off();
-        }
+        const row = drawRow(undefined, undefined, _undoRow);
+        
+        setUndoRow([...row]);
       }
-      
-      const row = drawRow(undefined, undefined, _undoRow);
-      
-      setUndoRow([...row]);
     }
   }, [addRow]);
 
