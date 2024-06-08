@@ -299,6 +299,10 @@ export const App = () => {
 
       boardCopy[ridx][cidx].hidden = true;
       boardCopy = boardCopy.filter(x => !x.every(y => y.hidden));
+      if (hasWon(boardCopy)) {
+        setUndoState(undefined);
+        setUndoRow(undefined);
+      }
       setCleared(c => ++c);
       setBoard(boardCopy);
       if (ridx === 0) {
@@ -345,9 +349,24 @@ export const App = () => {
     boardCopy[0][openColIdx] = {...board[ridx][cidx]};
     boardCopy[ridx][cidx].hidden = true;
     boardCopy = boardCopy.filter(x => !x.every(y => y.hidden));
+
+    if (hasWon(boardCopy)) {
+      setUndoState(undefined);
+      setUndoRow(undefined);
+    }
     
     setOpenColumns(openColumns.filter(i => i != openColIdx));
     setBoard(boardCopy);
+  };
+
+  const hasWon = (b: Card[][]) => {
+    if (b == undefined) return false;
+
+    if (b.length > 1) return false;
+
+    if (!b[0].every(x => x.val == CardVal.Ace)) return false;
+
+    return true;
   };
 
   const cardClick = (e: React.MouseEvent, ridx: number, cidx: number) => {
