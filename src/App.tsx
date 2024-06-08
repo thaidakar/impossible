@@ -101,6 +101,9 @@ export const App = () => {
         
         setUndoRow([...row]);
       }
+      else if (hasWon(board)) {
+        setDoParty(Math.random());
+      }
     }
   }, [addRow]);
 
@@ -176,8 +179,6 @@ export const App = () => {
 
   const drawRow = (_deck?: Card[], _board?: Card[][], _row?: Card[]) => {
     if (deck.length === 0) {
-      if (board.length == 1)
-        setDoParty(Math.random());
       return [];
     }
 
