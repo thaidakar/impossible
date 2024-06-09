@@ -30,6 +30,7 @@ export interface AchievementsProps {
     deckSize: number;
     board: Card[][];
     doParty: number;
+    deck: Card[];
 }
 
 interface Achievements {
@@ -44,7 +45,7 @@ interface Achievements {
 const achievements_key = 'achievements';
 
 export const AchievementsModal = (props: AchievementsProps) => {
-    const { cleared, openColumns, reset, deckSize, board, doParty } = props;
+    const { cleared, openColumns, reset, deckSize, board, doParty, deck } = props;
     
     const toast = useToast();
     const { isOpen, onOpen, onClose } = useDisclosure();
@@ -90,7 +91,7 @@ export const AchievementsModal = (props: AchievementsProps) => {
     }, [openColumns]);
 
     useEffect(() => {
-        if (board.length == 1 && board?.at(0)?.every(x => x.val == CardVal.Ace) && cleared === 48 && openColumns.length === 0 && !winLock) {
+        if (board.length == 1 && board?.at(0)?.every(x => x.val == CardVal.Ace) && deck?.length == 0 && !winLock) {
             setWinLock.on();
             setTimeout(() => {
                 const newAchievement: Achievements = {

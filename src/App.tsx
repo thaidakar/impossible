@@ -366,7 +366,7 @@ export const App = () => {
   const hasWon = (b: Card[][]) => {
     if (b == undefined) return false;
 
-    if (b.length > 1) return false;
+    if (b.length > 1 || deck.length > 0) return false;
 
     if (!b[0].every(x => x.val == CardVal.Ace)) return false;
 
@@ -453,7 +453,7 @@ export const App = () => {
                 <MenuList zIndex={1000}>
                   <ColorModeSwitcher />
                   <MenuDivider border='none' />
-                  <AchievementsModal doParty={doParty} board={board} cleared={cleared} openColumns={openColumns} deckSize={deck.length} reset={reset} />
+                  <AchievementsModal deck={deck} doParty={doParty} board={board} cleared={cleared} openColumns={openColumns} deckSize={deck.length} reset={reset} />
                   <MenuDivider border='none'  />
                   <TutorialModal />
                 </MenuList>
