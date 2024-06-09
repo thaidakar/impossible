@@ -35,6 +35,7 @@ interface UndoState {
   board: Card[][];
   deck: Card[];
   openColumns: number[];
+  cleared: number;
 }
 
 export const App = () => {
@@ -163,6 +164,7 @@ export const App = () => {
         setBoard(undoState.board);
         setDeck(undoState.deck);
         setOpenColumns(undoState.openColumns);
+        setCleared(undoState.cleared);
 
         setUndoState(undefined);
       }
@@ -282,7 +284,8 @@ export const App = () => {
     setUndoState({
       board: _boardCopy,
       deck: _deckCopy,
-      openColumns: _openColumnsCopy
+      openColumns: _openColumnsCopy,
+      cleared: +cleared.toString()
     });
   };
 

@@ -91,7 +91,7 @@ export const AchievementsModal = (props: AchievementsProps) => {
     }, [openColumns]);
 
     useEffect(() => {
-        if (board.length == 1 && board?.at(0)?.every(x => x.val == CardVal.Ace) && deck?.length == 0 && !winLock) {
+        if (board.length == 1 && !!board?.at(0)?.every(x => x.val == CardVal.Ace) && deck?.length == 0 && cleared >= 48 && !winLock) {
             setWinLock.on();
             setTimeout(() => {
                 const newAchievement: Achievements = {
