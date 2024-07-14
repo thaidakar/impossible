@@ -192,7 +192,9 @@ export const App = () => {
       for (let i = 0; i < 4; i++) {
         const curCard = row[i];
         const idx = _deck.findIndex(x => x.suite == curCard.suite && x.val == curCard.val);
-        _deck.splice(idx, 1);
+        if (idx > -1) {
+          _deck.splice(idx, 1);
+        }
       }
     }
     else {
@@ -200,7 +202,9 @@ export const App = () => {
         const {idx, card} = GetNextCard(_deck);
         if (idx != undefined && card != undefined) {
           row.push(card);
-          _deck.splice(idx, 1);
+          if (idx > -1) {
+            _deck.splice(idx, 1);
+          }
         }
         else break; // Deck is empty
       }
@@ -210,15 +214,16 @@ export const App = () => {
     if (_board === undefined) _board = [...board];
 
     const _boardCopy = _board.map((r, rowIndex) =>
-    r.map((card, colIndex) => {
-        if (colComp.length > 0 && colComp.indexOf(colIndex) > -1) 
+      r.map((card, colIndex) => {
+          if (colComp.length > 0 && colComp.indexOf(colIndex) > -1) 
+            return card;
+          if (!!card.hidden) {
+            colComp.push(colIndex);
+            return row[colIndex];
+          }
           return card;
-        if (!!card.hidden) {
-          colComp.push(colIndex);
-          return row[colIndex];
-        }
-        return card;
-    }));
+      })
+    );
 
     const newRow: Card[] = [];
     if (colComp.length < 4) {
@@ -240,6 +245,8 @@ export const App = () => {
 
   const canRemove = (card: Card, ridx: number, cidx: number) => {
     if (!canClick(ridx, cidx)) return false;
+
+    if (card.val == CardVal.Ace) return false;  // Cannot clear Aces, so why bother processing further
     
     // Cannot clear if there is not a higher card on the same row
     const colComp = [];
@@ -290,24 +297,20 @@ export const App = () => {
   };
 
   const handleCardClick = (ridx: number, cidx: number) => {
-    // Don't show selected animation for the empty columns
-    if (!!board?.at(ridx)?.at(cidx)?.hidden) {
-      return;
-    }
-
-    // No point checking if we can't click it...
+    // No point if we can't click it...
     if (!canClick(ridx, cidx)) {
       return;
     }
 
-    let boardCopy = [...board];    
+    let boardCopy = [...board];
     if (canRemove(boardCopy[ridx][cidx], ridx, cidx)) {
       copyToUndoState();
 
       boardCopy[ridx][cidx].hidden = true;
-      boardCopy = boardCopy.filter(x => !x.every(y => y.hidden));
+      boardCopy = boardCopy.filter(x => !x.every(y => y.hidden)); // Get rid of rows that are completely hidden
       if (hasWon(boardCopy)) {
-        setUndoState(undefined);
+        // Can't undo once you win to prevent achievements from ticking up >1
+        setUndoState(undefined); 
         setUndoRow(undefined);
       }
       setCleared(c => ++c);
@@ -315,11 +318,9 @@ export const App = () => {
       if (ridx === 0) {
         setOpenColumns(c => [...c, cidx]);
       }
-      return;
     }
     else if (openColumns?.length > 0) {
       handleCardRightClick(ridx, cidx);
-      return;
     }
   };
 
@@ -342,11 +343,13 @@ export const App = () => {
 
   const handleCardRightClick = (ridx: number, cidx: number) => {
 
-    if (ridx === 0) return;
+    if (ridx === 0) return; // Once something is on the top row, it can't be moved to the top row...
+
+    if (openColumns == undefined || openColumns?.length == 0) return; // Can't move anything up when there's nowhere to go
 
     const openColIdx = openColumns?.at(0);
     if (openColIdx === undefined) {
-      // No open columns
+      // Shouldn't happen, but still check
       return;
     }
 

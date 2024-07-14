@@ -58,7 +58,6 @@ export const cardValues = Object.values(CardVal) as CardVal[];
 export function GetNextCard(deck: Card[]) {
 
     if (deck.length === 0) {
-        console.log("Deck is empty.")
         return {idx: undefined, card: undefined};
     }
 
