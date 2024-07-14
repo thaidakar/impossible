@@ -28,8 +28,9 @@ import { GetNextCard, Card, suiteValues, cardValues, displayName, Suite, CardVal
 import { HamburgerIcon, RepeatIcon } from "@chakra-ui/icons";
 import { TutorialModal } from "./Components/TutorialModal";
 import { AchievementsModal } from "./Components/AchievementsModal";
-import './App.css';
 import { FaUndo } from "react-icons/fa";
+import packageInfo from '../package.json';
+import './App.css';
 
 interface UndoState {
   board: Card[][];
@@ -462,6 +463,12 @@ export const App = () => {
                   <AchievementsModal deck={deck} doParty={doParty} board={board} cleared={cleared} openColumns={openColumns} deckSize={deck.length} reset={reset} />
                   <MenuDivider border='none'  />
                   <TutorialModal />
+                  <MenuDivider />
+                    <Box display='flex' justifyContent='center'>
+                      <Text opacity={0.5}>
+                        Version {packageInfo?.version}
+                      </Text>
+                    </Box>
                 </MenuList>
               </Portal>
             </Menu>
