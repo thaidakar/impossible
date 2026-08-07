@@ -438,57 +438,55 @@ export const App = () => {
   };
   
   return (
-    <ChakraProvider theme={theme}>
-      <Box textAlign='center' fontSize='xl' overflow='hidden'> 
-        <VStack h='100%' p={3} overflow='hidden'>
-          <HStack w='100%' justifyContent='space-between'>
-            <Button variant='ghost' onClick={resetDeck} className='reset'>
-              <RepeatIcon key={`repeat-${reset}`} className={isPageLoad ? '' : 'rotating'} />
-            </Button>
-            <Button isDisabled={!undoState} variant='ghost' className='reset' onClick={setUndo.on}>
-              <FaUndo size='14' key={`undo-${undo}`} className={!hasUndone ? '' : 'rotating'} />
-            </Button>
-            <Menu>
-              <MenuButton
-                as={IconButton}
-                aria-label='Options'
-                icon={<HamburgerIcon />}
-                variant='ghost'
-                className='no-tap'
-              />
-              <Portal>
-                <MenuList zIndex={1000}>
-                  <ColorModeSwitcher />
-                  <MenuDivider border='none' />
-                  <AchievementsModal deck={deck} doParty={doParty} board={board} cleared={cleared} openColumns={openColumns} deckSize={deck.length} reset={reset} />
-                  <MenuDivider border='none'  />
-                  <TutorialModal />
-                  <MenuDivider />
-                    <Box display='flex' justifyContent='center'>
-                      <Text opacity={0.5}>
-                        Version {packageInfo?.version}
-                      </Text>
-                    </Box>
-                </MenuList>
-              </Portal>
-            </Menu>
-          </HStack>
-          <VStack>
-            <Box style={{ borderBottom: `${ board.length > 7 ? '2px solid black' : ''}`}} h={500} overflowX='hidden' overflowY='auto'>
-              <SimpleGrid key={Math.random()} columns={4} spacingX={1}>
-                {board && displayBoard()}
-              </SimpleGrid>
-            </Box>
-            <button className='pushable' onClick={setAddRow.on}>
-              <span className="shadow"></span>
-              <span className="edge"></span>
-              <span className='front'>
-                {deck?.length > 0 ? `${deck?.length / 4 < 9 ? deck?.length / 4 : 9} row${deck?.length / 4 === 1 ? '' : 's'} left` : cleared == 48 ? 'woo hoo!' : 'womp womp'}
-              </span>
-            </button>
-          </VStack>
+    <Box textAlign='center' fontSize='xl' overflow='hidden'> 
+      <VStack h='100%' p={3} overflow='hidden'>
+        <HStack w='100%' justifyContent='space-between'>
+          <Button variant='ghost' onClick={resetDeck} className='reset'>
+            <RepeatIcon key={`repeat-${reset}`} className={isPageLoad ? '' : 'rotating'} />
+          </Button>
+          <Button isDisabled={!undoState} variant='ghost' className='reset' onClick={setUndo.on}>
+            <FaUndo size='14' key={`undo-${undo}`} className={!hasUndone ? '' : 'rotating'} />
+          </Button>
+          <Menu>
+            <MenuButton
+              as={IconButton}
+              aria-label='Options'
+              icon={<HamburgerIcon />}
+              variant='ghost'
+              className='no-tap'
+            />
+            <Portal>
+              <MenuList zIndex={1000}>
+                <ColorModeSwitcher />
+                <MenuDivider border='none' />
+                <AchievementsModal deck={deck} doParty={doParty} board={board} cleared={cleared} openColumns={openColumns} deckSize={deck.length} reset={reset} />
+                <MenuDivider border='none'  />
+                <TutorialModal />
+                <MenuDivider />
+                  <Box display='flex' justifyContent='center'>
+                    <Text opacity={0.5}>
+                      Version {packageInfo?.version}
+                    </Text>
+                  </Box>
+              </MenuList>
+            </Portal>
+          </Menu>
+        </HStack>
+        <VStack>
+          <Box style={{ borderBottom: `${ board.length > 7 ? '2px solid black' : ''}`}} h={500} overflowX='hidden' overflowY='auto'>
+            <SimpleGrid key={Math.random()} columns={4} spacingX={1}>
+              {board && displayBoard()}
+            </SimpleGrid>
+          </Box>
+          <button className='pushable' onClick={setAddRow.on}>
+            <span className="shadow"></span>
+            <span className="edge"></span>
+            <span className='front'>
+              {deck?.length > 0 ? `${deck?.length / 4 < 9 ? deck?.length / 4 : 9} row${deck?.length / 4 === 1 ? '' : 's'} left` : cleared == 48 ? 'woo hoo!' : 'womp womp'}
+            </span>
+          </button>
         </VStack>
-      </Box>
-    </ChakraProvider>
+      </VStack>
+    </Box>
   );
 }
