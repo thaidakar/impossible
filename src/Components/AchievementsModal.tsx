@@ -18,7 +18,7 @@ import {
     Td,
     useBoolean
   } from '@chakra-ui/react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Confetti } from './Confetti';
 import { Card, CardVal } from '../Logic/Deck';
 
@@ -44,6 +44,20 @@ interface Achievements {
 
 const achievements_key = 'achievements';
 
+const loadAchievements = (): Achievements => {
+    const stored = localStorage.getItem(achievements_key);
+    if (!stored) return {};
+
+    try {
+        return JSON.parse(stored) as Achievements;
+    } catch {
+        return {};
+    }
+};
+
+const safeInc = (toInc?: number) => toInc ? toInc + 1 : 1;
+const safeCnt = (toCnt?: number) => toCnt ?? 0;
+
 export const AchievementsModal = (props: AchievementsProps) => {
     const { cleared, openColumns, reset, deckSize, board, doParty, deck } = props;
     
@@ -54,14 +68,16 @@ export const AchievementsModal = (props: AchievementsProps) => {
     const [throwConfetti, setThrowConfetti] = useBoolean(false);
     const [winLock, setWinLock] = useBoolean(false);
 
-    const loadAchievements = () => {
-        const _achievements = localStorage.getItem(achievements_key);
-        if (!!_achievements && _achievements != undefined) {
-            return JSON.parse(_achievements) as Achievements;
-        }
-
-        return {} as Achievements;
-    };
+    const showToast = useCallback((desc: string, isComplete?: boolean) => {
+        toast({
+            title: !!isComplete ? 'Maximum Achievement!' : 'New Achievement!',
+            description: desc,
+            status: !!isComplete ? 'success' : 'info',
+            duration: 9_000,
+            isClosable: true,
+            icon: !!isComplete ? <CheckIcon /> : <StarIcon />
+        });
+    }, [toast]);
 
     useEffect(() => {
         setAchievements(loadAchievements());
@@ -88,12 +104,12 @@ export const AchievementsModal = (props: AchievementsProps) => {
                     , openColumns.length === 3);
             }, 10);
         }
-    }, [openColumns]);
+    }, [achievements?.ColsCleared, openColumns, showToast]);
 
     useEffect(() => {
-        if (board.length == 1 && !!board?.at(0)?.every(x => x.val == CardVal.Ace) && deck?.length == 0 && cleared >= 48 && !winLock) {
+        if (board.length === 1 && !!board?.at(0)?.every(x => x.val === CardVal.Ace) && deck?.length === 0 && cleared >= 48 && !winLock) {
             setWinLock.on();
-            setTimeout(() => {
+            const timeout = window.setTimeout(() => {
                 const newAchievement: Achievements = {
                     ...loadAchievements(),
                     GamesWon: safeInc(achievements?.GamesWon)
@@ -105,12 +121,14 @@ export const AchievementsModal = (props: AchievementsProps) => {
 
                 setThrowConfetti.on();
             }, 20);
+
+            return () => window.clearTimeout(timeout);
         }
-    }, [cleared, openColumns, board]);
+    }, [achievements?.GamesWon, board, cleared, deck?.length, setThrowConfetti, setWinLock, showToast, winLock]);
 
     useEffect(() => {
         if (isFirstNewRow && safeCnt(achievements?.ClearedFirstHand) < cleared) {
-            setTimeout(() => {
+            const timeout = window.setTimeout(() => {
                 const newAchievement: Achievements = {
                     ...loadAchievements(),
                     ClearedFirstHand: cleared
@@ -125,15 +143,19 @@ export const AchievementsModal = (props: AchievementsProps) => {
                     , cleared === 15);
                 }
             }, 30);
+
+            if (deckSize < 36) setIsFirstNewRow.off();
+            return () => window.clearTimeout(timeout);
         }
         
         if (deckSize < 36) setIsFirstNewRow.off();
 
-    }, [deckSize, cleared]);
+    }, [achievements?.ClearedFirstHand, cleared, deckSize, isFirstNewRow, setIsFirstNewRow, showToast]);
 
     useEffect(() => {
+        let timeout: number | undefined;
         if (reset && cleared < 48 && !!achievements) {
-            setTimeout(() => {
+            timeout = window.setTimeout(() => {
                 const newAchievement: Achievements = {
                     ...loadAchievements(),
                     GamesLost: safeInc(achievements.GamesLost)
@@ -145,26 +167,10 @@ export const AchievementsModal = (props: AchievementsProps) => {
 
         setIsFirstNewRow.on();
         setWinLock.off();
-    }, [reset]);
-
-    const showToast = (desc: string, isComplete?: boolean) => {
-        toast({
-            title: !!isComplete ? 'Maximum Achievement!' : 'New Achievement!',
-            description: desc,
-            status: !!isComplete ? 'success' : 'info',
-            duration: 9_000,
-            isClosable: true,
-            icon: !!isComplete ? <CheckIcon /> : <StarIcon />
-        });
-    };
-
-    const safeInc = (toInc?: number) => {
-        return !!toInc ? toInc + 1 : 1;
-    }
-
-    const safeCnt = (toCnt?: number) => {
-        return !!toCnt ? toCnt : 0;
-    }
+        return () => {
+            if (timeout !== undefined) window.clearTimeout(timeout);
+        };
+    }, [achievements, cleared, reset, setIsFirstNewRow, setWinLock]);
 
     const getCompStyle = (isMax: boolean) => {
         return { color: isMax ? 'goldenrod' : ''};

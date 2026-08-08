@@ -1,5 +1,4 @@
 {
-  "homepage": "https://thaidakar.github.io/impossible",
   "name": "impossible-game",
   "version": "1.4.1",
   "private": true,
@@ -10,10 +9,10 @@
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
     "@testing-library/jest-dom": "^5.17.0",
-    "@testing-library/react": "^13.4.0",
+    "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.5.2",
     "@types/jest": "^28.1.8",
-    "@types/node": "^12.20.55",
+    "@types/node": "^22.20.1",
     "@types/react": "^18.3.2",
     "@types/react-dom": "^18.3.0",
     "framer-motion": "^6.5.1",
@@ -29,9 +28,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -47,8 +44,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "gh-pages": "^6.1.1"
   }
 }

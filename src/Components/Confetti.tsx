@@ -15,15 +15,15 @@ export const Confetti = (props: ConfettiProps) => {
     const [windowDimension, setDimension] = useState({width: window.innerWidth, height: window.innerHeight});
     const { colorMode } = useColorMode();
 
-    const detectSize = () => {
-        setDimension({ width: window.innerWidth, height: window.innerHeight });
-    };
-
     useEffect(() => {
+        const detectSize = () => {
+            setDimension({ width: window.innerWidth, height: window.innerHeight });
+        };
+
         window.addEventListener('resize', detectSize);
 
         return () => window.removeEventListener('resize', detectSize);
-    });
+    }, []);
 
     return (
         <ReactConfetti 
@@ -52,7 +52,7 @@ export const Confetti = (props: ConfettiProps) => {
                         suite = Suite.Spade;
                         break;
                 }
-                ctx.fillStyle = suite == Suite.Diamond || suite == Suite.Heart ? '#DB1424' : colorMode === 'dark' ? 'white' : 'black';
+                ctx.fillStyle = suite === Suite.Diamond || suite === Suite.Heart ? '#DB1424' : colorMode === 'dark' ? 'white' : 'black';
                 ctx.fillText(suite, 0, 0);
             }}
         />
