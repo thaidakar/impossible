@@ -24,7 +24,8 @@ import {
   MenuDivider,
 } from "@chakra-ui/react";
 import { ColorModeSwitcher } from "./ColorModeSwitcher";
-import { GetNextCard, Card, suiteValues, cardValues, displayName, Suite, CardVal } from "./Logic/Deck";
+import { Card, displayName, Suite, CardVal } from "./Logic/Deck";
+import { GameState, canClick, createNewGame, addRowToGame, handleCardClick, handleMoveUp, hasWon, undoGame } from "./Logic/Game";
 import { HamburgerIcon, RepeatIcon } from "@chakra-ui/icons";
 import { TutorialModal } from "./Components/TutorialModal";
 import { AchievementsModal } from "./Components/AchievementsModal";
@@ -32,27 +33,14 @@ import { FaUndo } from "react-icons/fa";
 import packageInfo from '../package.json';
 import './App.css';
 
-interface UndoState {
-  board: Card[][];
-  deck: Card[];
-  openColumns: number[];
-  cleared: number;
-}
-
 export const App = () => {
 
-  const [board, setBoard] = React.useState<Card[][]>([[{ val: CardVal.Ace, suite: Suite.Spade, hidden: true},{ val: CardVal.Ace, suite: Suite.Spade, hidden: true},{ val: CardVal.Ace, suite: Suite.Spade, hidden: true},{ val: CardVal.Ace, suite: Suite.Spade, hidden: true}]]);
-  const [deck, setDeck] = React.useState<Card[]>([]);
+  const [game, setGame] = React.useState<GameState>(() => createNewGame());
   const [reset, setReset] = useBoolean(true);
   const [addRow, setAddRow] = useBoolean(false);
-  const [cleared, setCleared] = React.useState(0);
-  const [openColumns, setOpenColumns] = React.useState<number[]>([]);
-  const [isPageLoad, setIsPageLoad] = useBoolean(true);
   const [doParty, setDoParty] = React.useState(0);
+  const [isPageLoad, setIsPageLoad] = useBoolean(true);
   const [undo, setUndo] = useBoolean(false);
-  const [undoState, setUndoState] = React.useState<UndoState | undefined>();
-  const [undoRow, setUndoRow] = React.useState<Card[] | undefined>();
-  const [addUndoRow, setAddUndoRow] = useBoolean(false);
   const [hasUndone, setHasUndone] = useBoolean(false);
 
   React.useEffect(() => {
@@ -76,82 +64,29 @@ export const App = () => {
     if (addRow) {
       setAddRow.off();
 
-      if (deck?.length > 0) {
-
-        copyToUndoState();
-        let _undoRow = undefined;
-        if (addUndoRow && !!undoRow) {
-          
-          let doUn = true;
-          for (let j = 0; j < board.length; j++) {
-            for (let i = 0; i < board[j].length; i++) {
-              const card = board[j][i]
-              if (!!undoRow.find(c => c.suite == card.suite && c.val == card.val)) {
-                doUn = false;
-                break;
-              }
-            }
-          }
-          
-          if (doUn) {
-            _undoRow = undoRow;
-            setAddUndoRow.off();
-          }
-        }
-        
-        const row = drawRow(undefined, undefined, _undoRow);
-        
-        setUndoRow([...row]);
+      if (game.deck.length > 0) {
+        setGame(prev => addRowToGame(prev));
       }
-      else if (hasWon(board)) {
+      else if (hasWon(game.board, game.deck.length)) {
         setDoParty(Math.random());
       }
     }
-  }, [addRow]);
+  }, [addRow, game]);
 
   React.useEffect(() => {
-    const init = () => {
-      const _deck: Card[] = [];
-      for (let suite in suiteValues) {
-        for (let value in cardValues) {
-          _deck.push({suite: suiteValues[suite], val: cardValues[value]});
-        }
-      }
-      setReset.off();
-      setDeck(_deck);
-      setCleared(0);
-      setOpenColumns([]);
+    if (reset) {
+      setGame(createNewGame());
       setDoParty(0);
-      setUndoState(undefined);
-      setUndoRow(undefined);
-      setAddUndoRow.off();
-    };
-    
-    if (reset)
-      init();
-
-    return () => {
-      setDeck([]);
-      setOpenColumns([]);
+      setReset.off();
     }
-
   }, [reset]);
 
   React.useEffect(() => {
-    // When the deck is full, display full board
-    if (deck.length == 52) {
-      const _deck = [...deck];
-      const _board: Card[][] = [];
-      for (let i = 0; i < 4; i++) {
-        drawRow(_deck, _board);
-      }
-    }
-
-    if (deck.length === 0 && board.length === 0 && !reset) {
+    // When the deck is empty and the board is fully cleared, start a new game
+    if (game.deck.length === 0 && game.board.length === 0 && !reset) {
       setReset.on();
     }
-
-  }, [deck, board]);
+  }, [game, reset]);
 
   React.useEffect(() => {
     if (undo) {
@@ -159,19 +94,9 @@ export const App = () => {
 
       if (!hasUndone) setHasUndone.on();
 
-      if (!!undoState) {
-        setAddUndoRow.on();
-
-        setBoard(undoState.board);
-        setDeck(undoState.deck);
-        setOpenColumns(undoState.openColumns);
-        setCleared(undoState.cleared);
-
-        setUndoState(undefined);
-      }
+      setGame(prev => undoGame(prev));
     }
-
-  }, [undo, undoState]);
+  }, [undo]);
 
   const resetDeck = () => {
     if (isPageLoad) {
@@ -180,214 +105,7 @@ export const App = () => {
     setReset.on();
   }
 
-  const drawRow = (_deck?: Card[], _board?: Card[][], _row?: Card[]) => {
-    if (deck.length === 0) {
-      return [];
-    }
-
-    if (_deck === undefined) _deck = [...deck];
-
-    let row: Card[] = [];
-    if (!!_row) {
-      row = [..._row];
-      for (let i = 0; i < 4; i++) {
-        const curCard = row[i];
-        const idx = _deck.findIndex(x => x.suite == curCard.suite && x.val == curCard.val);
-        if (idx > -1) {
-          _deck.splice(idx, 1);
-        }
-      }
-    }
-    else {
-      for (let i = 0; i < 4; i++) {
-        const {idx, card} = GetNextCard(_deck);
-        if (idx != undefined && card != undefined) {
-          row.push(card);
-          if (idx > -1) {
-            _deck.splice(idx, 1);
-          }
-        }
-        else break; // Deck is empty
-      }
-    }
-
-    const colComp: number[] = [];
-    if (_board === undefined) _board = [...board];
-
-    const _boardCopy = _board.map((r, rowIndex) =>
-      r.map((card, colIndex) => {
-          if (colComp.length > 0 && colComp.indexOf(colIndex) > -1) 
-            return card;
-          if (!!card.hidden) {
-            colComp.push(colIndex);
-            return row[colIndex];
-          }
-          return card;
-      })
-    );
-
-    const newRow: Card[] = [];
-    if (colComp.length < 4) {
-      for (let col = 0; col < 4; col++) {
-        if (colComp.length > 0 && colComp.indexOf(col) > -1) newRow.push({ suite: Suite.Spade, val: CardVal.Ace, hidden: true});
-        else newRow.push(row[col]);
-      }
-      _boardCopy.push(newRow);
-    }
-
-    setOpenColumns([]);
-    setDeck(_deck);
-    setBoard(_boardCopy);
-    _board.splice(0,_board.length);
-    _board.push(..._boardCopy);
-
-    return row;
-  };
-
-  const canRemove = (card: Card, ridx: number, cidx: number) => {
-    if (!canClick(ridx, cidx)) return false;
-
-    if (card.val == CardVal.Ace) return false;  // Cannot clear Aces, so why bother processing further
-    
-    // Cannot clear if there is not a higher card on the same row
-    const colComp = [];
-    for (let i = board.length - 1; i > -1; i--) {
-      let rowComp;
-      for (let j = 3; j > -1; j--) {
-        if (j == cidx) continue; // don't count the column of the card we're looking at
-        if (colComp.indexOf(j) > -1) continue;
-        const compCard = board[i][j];
-        if (!!compCard.hidden) {
-          rowComp = false;
-          continue;
-        } 
-        if (rowComp === undefined) rowComp = true;
-        if (compCard.suite === card.suite && +compCard.val > +card.val) {
-          return true;
-        }
-        colComp.push(j)
-      }
-      if (rowComp) break;
-    }
-
-    return false;
-  }
-
-  const copyToUndoState = () => {
-    const _boardCopy: Card[][] = [];
-    const _deckCopy: Card[] = [...deck];
-    const _openColumnsCopy: number[] = [...openColumns];
-
-    for (let i = 0; i < board.length; i++) {
-      const row = [];
-      for (let j = 0; j < board[i].length; j++) {
-        const crd: Card = {
-          ...board[i][j]
-        }
-        row.push(crd);
-      }
-      _boardCopy.push(row);
-    }
-
-    setUndoState({
-      board: _boardCopy,
-      deck: _deckCopy,
-      openColumns: _openColumnsCopy,
-      cleared: +cleared.toString()
-    });
-  };
-
-  const handleCardClick = (ridx: number, cidx: number) => {
-    // No point if we can't click it...
-    if (!canClick(ridx, cidx)) {
-      return;
-    }
-
-    let boardCopy = [...board];
-    if (canRemove(boardCopy[ridx][cidx], ridx, cidx)) {
-      copyToUndoState();
-
-      boardCopy[ridx][cidx].hidden = true;
-      boardCopy = boardCopy.filter(x => !x.every(y => y.hidden)); // Get rid of rows that are completely hidden
-      if (hasWon(boardCopy)) {
-        // Can't undo once you win to prevent achievements from ticking up >1
-        setUndoState(undefined); 
-        setUndoRow(undefined);
-      }
-      setCleared(c => ++c);
-      setBoard(boardCopy);
-      if (ridx === 0) {
-        setOpenColumns(c => [...c, cidx]);
-      }
-    }
-    else if (openColumns?.length > 0) {
-      handleCardRightClick(ridx, cidx);
-    }
-  };
-
-  function canClick(ridx: number, cidx: number) {
-    // Cannot click if hidden
-    if (!!board?.at(ridx)?.at(cidx)?.hidden) {
-      return false;
-    }
-
-    // Cannot click if there is a card below
-    if (ridx + 1 <= board.length - 1) {
-      const cardBelow = board[ridx+1][cidx];
-      if (!!cardBelow && !cardBelow.hidden) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  const handleCardRightClick = (ridx: number, cidx: number) => {
-
-    if (ridx === 0) return; // Once something is on the top row, it can't be moved to the top row...
-
-    if (openColumns == undefined || openColumns?.length == 0) return; // Can't move anything up when there's nowhere to go
-
-    const openColIdx = openColumns?.at(0);
-    if (openColIdx === undefined) {
-      // Shouldn't happen, but still check
-      return;
-    }
-
-    copyToUndoState();
-
-    let boardCopy = [...board];
-    boardCopy[0][openColIdx] = {...board[ridx][cidx]};
-    boardCopy[ridx][cidx].hidden = true;
-    boardCopy = boardCopy.filter(x => !x.every(y => y.hidden));
-
-    if (hasWon(boardCopy)) {
-      setUndoState(undefined);
-      setUndoRow(undefined);
-    }
-    
-    setOpenColumns(openColumns.filter(i => i != openColIdx));
-    setBoard(boardCopy);
-  };
-
-  const hasWon = (b: Card[][]) => {
-    if (b == undefined) return false;
-
-    if (b.length > 1 || deck.length > 0) return false;
-
-    if (!b[0].every(x => x.val == CardVal.Ace)) return false;
-
-    return true;
-  };
-
-  const cardClick = (e: React.MouseEvent, ridx: number, cidx: number) => {
-    if (e.type === 'click'){
-      e.preventDefault()
-      handleCardClick(ridx, cidx);
-    } 
-  }
-
-  function getClass(card: Card, ridx: number, cidx: number) {
+  const getClass = (card: Card, ridx: number, cidx: number) => {
     let cardClass = 'card';
 
     if (ridx > 0) {
@@ -406,24 +124,24 @@ export const App = () => {
         cardClass += ' golden';
       }
     }
-    if (!canClick(ridx,cidx)) {
+    if (!canClick(game, ridx, cidx)) {
       cardClass += ' no-tap';
     }
     return cardClass;
   }
 
   const displayBoard = () => {
-    return board.map((row, ridx) => 
-            row.map((card, cidx) => 
-              <CardElement 
-                style={{zIndex: ridx}} 
+    return game.board.map((row, ridx) =>
+            row.map((card, cidx) =>
+              <CardElement
+                style={{zIndex: ridx}}
                 className={getClass(card, ridx, cidx)}
-                w={[85, 90, 100]} h={130} p={0} 
+                w={[85, 90, 100]} h={130} p={0}
                 key={card.suite + card.val + ridx + cidx}
-                onClick={(e) => cardClick(e, ridx, cidx)} 
-                onContextMenu={(e) => { e.preventDefault(); if (e.type === 'contextmenu') handleCardRightClick(ridx, cidx);}}>
+                onClick={(e) => { e.preventDefault(); setGame(prev => handleCardClick(prev, ridx, cidx)); }}
+                onContextMenu={(e) => { e.preventDefault(); setGame(prev => handleMoveUp(prev, ridx, cidx)); }}>
                   <CardBody hidden={card.hidden} px={3} pt={2} className='card-body'>
-                    <HStack right={[7.7, 0]} className={card.suite == Suite.Diamond || card.suite == Suite.Heart ? 'suite-r' : ''} justifyContent='space-between' style={{ position: card.val === CardVal.Ten ? 'relative' : 'inherit'}}>                      
+                    <HStack right={[7.7, 0]} className={card.suite == Suite.Diamond || card.suite == Suite.Heart ? 'suite-r' : ''} justifyContent='space-between' style={{ position: card.val === CardVal.Ten ? 'relative' : 'inherit'}}>
                       <StackItem>
                         {displayName(card.val)}
                       </StackItem>
@@ -436,15 +154,15 @@ export const App = () => {
             )
           )
   };
-  
+
   return (
-    <Box textAlign='center' fontSize='xl' overflow='hidden'> 
+    <Box textAlign='center' fontSize='xl' overflow='hidden'>
       <VStack h='100%' p={3} overflow='hidden'>
         <HStack w='100%' justifyContent='space-between'>
           <Button variant='ghost' onClick={resetDeck} className='reset'>
             <RepeatIcon key={`repeat-${reset}`} className={isPageLoad ? '' : 'rotating'} />
           </Button>
-          <Button isDisabled={!undoState} variant='ghost' className='reset' onClick={setUndo.on}>
+          <Button isDisabled={!game.undoState} variant='ghost' className='reset' onClick={setUndo.on}>
             <FaUndo size='14' key={`undo-${undo}`} className={!hasUndone ? '' : 'rotating'} />
           </Button>
           <Menu>
@@ -459,7 +177,7 @@ export const App = () => {
               <MenuList zIndex={1000}>
                 <ColorModeSwitcher />
                 <MenuDivider border='none' />
-                <AchievementsModal deck={deck} doParty={doParty} board={board} cleared={cleared} openColumns={openColumns} deckSize={deck.length} reset={reset} />
+                <AchievementsModal deck={game.deck} doParty={doParty} board={game.board} cleared={game.cleared} openColumns={game.openColumns} deckSize={game.deck.length} reset={reset} />
                 <MenuDivider border='none'  />
                 <TutorialModal />
                 <MenuDivider />
@@ -473,16 +191,16 @@ export const App = () => {
           </Menu>
         </HStack>
         <VStack>
-          <Box style={{ borderBottom: `${ board.length > 7 ? '2px solid black' : ''}`}} h={500} overflowX='hidden' overflowY='auto'>
+          <Box style={{ borderBottom: `${ game.board.length > 7 ? '2px solid black' : ''}`}} h={500} overflowX='hidden' overflowY='auto'>
             <SimpleGrid key={Math.random()} columns={4} spacingX={1}>
-              {board && displayBoard()}
+              {game.board && displayBoard()}
             </SimpleGrid>
           </Box>
           <button className='pushable' onClick={setAddRow.on}>
             <span className="shadow"></span>
             <span className="edge"></span>
             <span className='front'>
-              {deck?.length > 0 ? `${deck?.length / 4 < 9 ? deck?.length / 4 : 9} row${deck?.length / 4 === 1 ? '' : 's'} left` : cleared == 48 ? 'woo hoo!' : 'womp womp'}
+              {game.deck?.length > 0 ? `${game.deck?.length / 4 < 9 ? game.deck?.length / 4 : 9} row${game.deck?.length / 4 === 1 ? '' : 's'} left` : game.cleared == 48 ? 'woo hoo!' : 'womp womp'}
             </span>
           </button>
         </VStack>
