@@ -1,20 +1,14 @@
 import * as React from "react"
 import {
-  ChakraProvider,
   Box,
   Button,
   Text,
-  Link,
   VStack,
-  Code,
-  Grid,
-  theme,
   Card as CardElement,
   CardBody,
   SimpleGrid,
   HStack,
   StackItem,
-  Tooltip,
   useBoolean,
   MenuButton,
   Menu,
@@ -58,7 +52,7 @@ export const App = () => {
     return () => {
       document.removeEventListener('keydown', handleSpacebarPress);
     };
-  }, []);
+  }, [setAddRow, setReset]);
 
   React.useEffect(() => {
     if (addRow) {
@@ -71,7 +65,7 @@ export const App = () => {
         setDoParty(Math.random());
       }
     }
-  }, [addRow, game]);
+  }, [addRow, game, setAddRow]);
 
   React.useEffect(() => {
     if (reset) {
@@ -79,14 +73,14 @@ export const App = () => {
       setDoParty(0);
       setReset.off();
     }
-  }, [reset]);
+  }, [reset, setReset]);
 
   React.useEffect(() => {
     // When the deck is empty and the board is fully cleared, start a new game
     if (game.deck.length === 0 && game.board.length === 0 && !reset) {
       setReset.on();
     }
-  }, [game, reset]);
+  }, [game, reset, setReset]);
 
   React.useEffect(() => {
     if (undo) {
@@ -96,7 +90,7 @@ export const App = () => {
 
       setGame(prev => undoGame(prev));
     }
-  }, [undo]);
+  }, [hasUndone, setHasUndone, setUndo, undo]);
 
   const resetDeck = () => {
     if (isPageLoad) {
@@ -141,7 +135,7 @@ export const App = () => {
                 onClick={(e) => { e.preventDefault(); setGame(prev => handleCardClick(prev, ridx, cidx)); }}
                 onContextMenu={(e) => { e.preventDefault(); setGame(prev => handleMoveUp(prev, ridx, cidx)); }}>
                   <CardBody hidden={card.hidden} px={3} pt={2} className='card-body'>
-                    <HStack right={[7.7, 0]} className={card.suite == Suite.Diamond || card.suite == Suite.Heart ? 'suite-r' : ''} justifyContent='space-between' style={{ position: card.val === CardVal.Ten ? 'relative' : 'inherit'}}>
+                    <HStack right={[7.7, 0]} className={card.suite === Suite.Diamond || card.suite === Suite.Heart ? 'suite-r' : ''} justifyContent='space-between' style={{ position: card.val === CardVal.Ten ? 'relative' : 'inherit'}}>
                       <StackItem>
                         {displayName(card.val)}
                       </StackItem>
@@ -200,7 +194,7 @@ export const App = () => {
             <span className="shadow"></span>
             <span className="edge"></span>
             <span className='front'>
-              {game.deck?.length > 0 ? `${game.deck?.length / 4 < 9 ? game.deck?.length / 4 : 9} row${game.deck?.length / 4 === 1 ? '' : 's'} left` : game.cleared == 48 ? 'woo hoo!' : 'womp womp'}
+              {game.deck?.length > 0 ? `${game.deck?.length / 4 < 9 ? game.deck?.length / 4 : 9} row${game.deck?.length / 4 === 1 ? '' : 's'} left` : game.cleared === 48 ? 'woo hoo!' : 'womp womp'}
             </span>
           </button>
         </VStack>

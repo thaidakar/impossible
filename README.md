@@ -27,8 +27,10 @@ Create the Pages project from **Workers & Pages > Create application > Pages > I
 | Production branch | `main` |
 | Build command | `npm run build` |
 | Build output directory | `build` |
-| Environment variable | `NODE_VERSION=20` |
-| Environment variable | `CI=false` |
+| Environment variable | `NODE_VERSION=22` |
+| Environment variable | `CI=true` |
+
+CI remains enabled so lint warnings fail builds instead of being hidden.
 
 The `homepage` setting is intentionally absent from `package.json`, so asset paths are generated for a root Cloudflare Pages site rather than a GitHub Pages project subpath.
 
