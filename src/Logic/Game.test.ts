@@ -501,6 +501,39 @@ describe("addRowToGame", () => {
     expect(next.deck.length).toBe(deck.length - 4);
   });
 
+  it("replays the previous row even when a hidden placeholder shares a card value with it", () => {
+    // The board contains a hidden-ace placeholder (left over from an earlier
+    // draw that filled a hole) while the real Ace of Spades is still in the
+    // deck. Replay must be decided by deck membership: the placeholder is not
+    // the real card, so the undo row must still be replayed exactly.
+    const board = [
+      row(c(Suite.Spade, CardVal.Two), c(Suite.Heart, CardVal.Three), c(Suite.Club, CardVal.Four), c(Suite.Diamond, CardVal.Five)),
+      row(c(Suite.Spade, CardVal.Six), c(Suite.Heart, CardVal.Seven), c(Suite.Club, CardVal.Eight), c(Suite.Diamond, CardVal.Nine)),
+      row(c(Suite.Spade, CardVal.Ten), h(Suite.Spade, CardVal.Ace), c(Suite.Club, CardVal.Jack), c(Suite.Diamond, CardVal.Queen)),
+    ];
+    // The deck contains every card not VISIBLE on the board, so it still
+    // holds the real Ace of Spades (the hidden ♠A cell is only a placeholder)
+    const deck = deckWithout(boardCards(board).filter(b => !b.hidden));
+    const ace = deck.find(d => d.suite === Suite.Spade && d.val === CardVal.Ace);
+    expect(ace).toBeDefined();
+
+    const drawnRow = [ace!, deck[0], deck[1], deck[2]];
+    const state = makeState({ board, deck, addUndoRow: true, undoRow: drawnRow });
+
+    const next = addRowToGame(state);
+
+    // The replay happened: every card of the undone row is back on the board
+    // (column 1's card fills the existing hole, the rest land in the new row)
+    for (const card of drawnRow) {
+      expect(boardCards(next.board).some(b => sameCard(b, card))).toBe(true);
+    }
+    expect(next.deck.length).toBe(deck.length - 4);
+    // No duplicate cards in play (visible cards vs. deck; hidden placeholder
+    // cells are cosmetic and legitimately mirror deck cards)
+    const all = [...boardCards(next.board).filter(b => !b.hidden), ...next.deck];
+    expect(new Set(all.map(c => c.suite + c.val)).size).toBe(all.length);
+  });
+
   it("does not draw when the deck is empty", () => {
     const board = [
       row(c(Suite.Spade, CardVal.Ace), c(Suite.Heart, CardVal.Ace), c(Suite.Club, CardVal.Ace), c(Suite.Diamond, CardVal.Ace)),
@@ -538,13 +571,6 @@ describe("game invariants under random play", () => {
 
     try {
       let state = createNewGame();
-      const openColumnCount = (board: Card[][]) => {
-        if (!board[0]) return 0;
-        let n = 0;
-        for (let col = 0; col < 4; col++) if (board[0][col].hidden) n++;
-        return n;
-      };
-
       const ops = 30 + Math.floor(rng() * 40);
       for (let i = 0; i < ops; i++) {
         const r = rng();
@@ -576,9 +602,13 @@ describe("game invariants under random play", () => {
           expect(boardKeys.has(card.suite + card.val)).toBe(false);
         }
 
-        // Invariant 2: openColumns exactly matches the columns with a hidden top cell
-        const expectedOpen = openColumnCount(state.board);
-        expect(state.openColumns.length).toBe(expectedOpen);
+        // Invariant 2: openColumns exactly matches the set of columns with a
+        // hidden top cell (indices, not just the count)
+        const expectedOpen: number[] = [];
+        for (let col = 0; col < 4; col++) {
+          if (state.board[0]?.[col]?.hidden) expectedOpen.push(col);
+        }
+        expect([...state.openColumns].sort()).toEqual(expectedOpen);
         expect(new Set(state.openColumns).size).toBe(state.openColumns.length);
 
         // Invariant 3: the deck is always a multiple of 4

@@ -271,7 +271,11 @@ export function handleMoveUp(state: GameState, ridx: number, cidx: number): Game
  *
  * After an undo, the previously drawn row is only replayed when those exact
  * cards are still in the deck (i.e. the undo restored them). If they were
- * cleared from the board, re-drawing them would create duplicate cards.
+ * cleared from the board, re-drawing them would create duplicate cards. The
+ * board is intentionally not consulted here: hidden cells on the board are
+ * either cleared-card ghosts or empty-cell placeholders (hidden aces), so a
+ * deck membership check is the only reliable way to tell a replayable row
+ * from a cleared one.
  */
 export function addRowToGame(state: GameState): GameState {
   if (state.deck.length === 0) {
@@ -286,8 +290,7 @@ export function addRowToGame(state: GameState): GameState {
   let rowOverride: Card[] | undefined;
   if (next.addUndoRow && next.undoRow) {
     const rowInDeck = next.undoRow.every(c => next.deck.some(d => sameCard(d, c)));
-    const rowOnBoard = next.undoRow.some(c => next.board.flat().some(b => sameCard(b, c)));
-    if (rowInDeck && !rowOnBoard) {
+    if (rowInDeck) {
       rowOverride = next.undoRow;
       next = { ...next, addUndoRow: false };
     }
