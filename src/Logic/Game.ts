@@ -29,9 +29,10 @@ const snapshot = (state: GameState): UndoState => ({
 });
 
 /**
- * Creates a fresh game: a full 52-card deck with the initial four rows dealt.
+ * Creates a fresh game: a full 52-card deck with the initial rows dealt.
+ * `rng` allows deterministic (seeded) deals for the daily challenge.
  */
-export function createNewGame(): GameState {
+export function createNewGame(initialRows: number = 4, rng: () => number = Math.random): GameState {
   const deck: Card[] = [];
   for (const suite of suiteValues) {
     for (const val of cardValues) {
@@ -47,8 +48,8 @@ export function createNewGame(): GameState {
     addUndoRow: false,
   };
 
-  for (let i = 0; i < 4; i++) {
-    state = drawRow(state).state;
+  for (let i = 0; i < initialRows; i++) {
+    state = drawRow(state, undefined, rng).state;
   }
 
   return state;
@@ -66,9 +67,10 @@ export interface DrawResult {
  * always reset, since drawing fills every open top-row cell.
  *
  * When `rowOverride` is provided the given cards are used instead of drawing
- * randomly, and are removed from the deck if present.
+ * randomly, and are removed from the deck if present. `rng` seeds the draw for
+ * the daily challenge.
  */
-export function drawRow(state: GameState, rowOverride?: Card[]): DrawResult {
+export function drawRow(state: GameState, rowOverride?: Card[], rng: () => number = Math.random): DrawResult {
   if (state.deck.length === 0) {
     return { state, row: [] };
   }
@@ -87,7 +89,7 @@ export function drawRow(state: GameState, rowOverride?: Card[]): DrawResult {
   } else {
     row = [];
     for (let i = 0; i < 4; i++) {
-      const { idx, card } = GetNextCard(deck);
+      const { idx, card } = GetNextCard(deck, rng);
       if (idx !== undefined && card !== undefined) {
         row.push(card);
         if (idx > -1) {
@@ -277,7 +279,7 @@ export function handleMoveUp(state: GameState, ridx: number, cidx: number): Game
  * deck membership check is the only reliable way to tell a replayable row
  * from a cleared one.
  */
-export function addRowToGame(state: GameState): GameState {
+export function addRowToGame(state: GameState, rng: () => number = Math.random): GameState {
   if (state.deck.length === 0) {
     return state;
   }
@@ -296,7 +298,7 @@ export function addRowToGame(state: GameState): GameState {
     }
   }
 
-  const { state: drawn, row } = drawRow(next, rowOverride);
+  const { state: drawn, row } = drawRow(next, rowOverride, rng);
 
   return { ...drawn, undoRow: [...row] };
 }

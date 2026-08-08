@@ -16,7 +16,8 @@ import {
     Tbody,
     Tr,
     Td,
-    useBoolean
+    useBoolean,
+    Button
   } from '@chakra-ui/react';
 import { useCallback, useEffect, useState } from 'react';
 import { Confetti } from './Confetti';
@@ -31,6 +32,8 @@ export interface AchievementsProps {
     board: Card[][];
     doParty: number;
     deck: Card[];
+    openSignal?: number;
+    asMenuItem?: boolean;
 }
 
 interface Achievements {
@@ -59,7 +62,7 @@ const safeInc = (toInc?: number) => toInc ? toInc + 1 : 1;
 const safeCnt = (toCnt?: number) => toCnt ?? 0;
 
 export const AchievementsModal = (props: AchievementsProps) => {
-    const { cleared, openColumns, reset, deckSize, board, doParty, deck } = props;
+    const { cleared, openColumns, reset, deckSize, board, doParty, deck, openSignal, asMenuItem = true } = props;
     
     const toast = useToast();
     const { isOpen, onOpen, onClose } = useDisclosure();
@@ -67,6 +70,12 @@ export const AchievementsModal = (props: AchievementsProps) => {
     const [isFirstNewRow, setIsFirstNewRow] = useBoolean(true);
     const [throwConfetti, setThrowConfetti] = useBoolean(false);
     const [winLock, setWinLock] = useBoolean(false);
+
+    useEffect(() => {
+        if (openSignal && openSignal > 0) {
+            onOpen();
+        }
+    }, [openSignal, onOpen]);
 
     const showToast = useCallback((desc: string, isComplete?: boolean) => {
         toast({
@@ -178,12 +187,20 @@ export const AchievementsModal = (props: AchievementsProps) => {
 
     return (
         <>
-            <MenuItem onClick={onOpen}>
-                <StarIcon />
-                <Text ml={5}>
-                    Achievements
-                </Text>
-            </MenuItem>
+            {asMenuItem
+                ? <MenuItem onClick={onOpen}>
+                    <StarIcon />
+                    <Text ml={5}>
+                        Achievements
+                    </Text>
+                </MenuItem>
+                : <Button onClick={onOpen} variant='ghost'>
+                    <StarIcon />
+                    <Text ml={2}>
+                        Achievements
+                    </Text>
+                </Button>
+            }
             <Portal>
                 <Modal isOpen={isOpen} onClose={onClose}>
                     <ModalOverlay />

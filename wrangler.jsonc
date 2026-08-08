@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "impossible",
+  "pages_build_output_dir": "./build",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "impossible-db",
+      "database_id": "4dc7d98a-da2a-49d7-befc-db5d62761e40"
+    }
+  ]
+}

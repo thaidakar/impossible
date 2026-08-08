@@ -1,4 +1,5 @@
 import { QuestionIcon } from '@chakra-ui/icons';
+import { useEffect } from 'react';
 import {
     Modal,
     ModalOverlay,
@@ -15,21 +16,37 @@ import {
     AccordionButton,
     Box,
     AccordionIcon,
-    AccordionPanel
+    AccordionPanel,
+    Button
   } from '@chakra-ui/react'
 
-export const TutorialModal = () => {
+export const TutorialModal = (props: { openSignal?: number; asMenuItem?: boolean }) => {
 
     const { isOpen, onOpen, onClose } = useDisclosure();
+    const { openSignal, asMenuItem = true } = props;
+
+    useEffect(() => {
+        if (openSignal && openSignal > 0) {
+            onOpen();
+        }
+    }, [openSignal, onOpen]);
 
     return (
         <>
-            <MenuItem onClick={onOpen}>
-                <QuestionIcon />
-                <Text ml={5}>
-                    Tutorial
-                </Text>
-            </MenuItem>
+            {asMenuItem
+                ? <MenuItem onClick={onOpen}>
+                    <QuestionIcon />
+                    <Text ml={5}>
+                        Tutorial
+                    </Text>
+                </MenuItem>
+                : <Button onClick={onOpen} variant='ghost'>
+                    <QuestionIcon />
+                    <Text ml={2}>
+                        Tutorial
+                    </Text>
+                </Button>
+            }
             <Portal>
                 {isOpen &&
                 <Modal isOpen={isOpen} onClose={onClose}>

@@ -53,7 +53,7 @@ export interface Card {
 export const suiteValues = Object.values(Suite) as Suite[];
 export const cardValues = Object.values(CardVal) as CardVal[];
 
-export function GetNextCard(deck: Card[]) {
+export function GetNextCard(deck: Card[], rng: () => number = Math.random) {
 
     if (deck.length === 0) {
         return {idx: undefined, card: undefined};
@@ -63,8 +63,8 @@ export function GetNextCard(deck: Card[]) {
     let idx: number;
 
     while (true) {
-        const suite = suiteValues[Math.floor(Math.random() * suiteValues.length)];
-        const value = cardValues[Math.floor(Math.random() * cardValues.length)];
+        const suite = suiteValues[Math.floor(rng() * suiteValues.length)];
+        const value = cardValues[Math.floor(rng() * cardValues.length)];
 
         card = {suite: suite, val: value} as Card;
 

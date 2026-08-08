@@ -27,8 +27,12 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "api": "wrangler pages dev --port 8788",
+    "db:local": "wrangler d1 execute impossible-db --local --file=schema.sql",
+    "db:remote": "wrangler d1 execute impossible-db --remote --file=schema.sql"
   },
+  "proxy": "http://localhost:8788",
   "eslintConfig": {
     "extends": "react-app"
   },
@@ -43,5 +47,9 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260807.2",
+    "wrangler": "^4.120.0"
   }
 }
