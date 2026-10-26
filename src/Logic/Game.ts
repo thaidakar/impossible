@@ -62,8 +62,8 @@ export interface DrawResult {
 /**
  * Draws up to four cards from the deck. Each column receives exactly one new
  * card: it fills the topmost hidden cell in that column, or (for columns with
- * no hidden cells) the new bottom row. The previously tracked open columns are
- * always reset, since drawing fills every open top-row cell.
+ * no hidden cells) the new bottom row. Open columns are recomputed after the
+ * draw so any unfilled top-row cells remain available.
  *
  * When `rowOverride` is provided the given cards are used instead of drawing
  * randomly, and are removed from the deck if present.
@@ -125,12 +125,17 @@ export function drawRow(state: GameState, rowOverride?: Card[]): DrawResult {
     boardCopy.push(newRow);
   }
 
+  const openColumns = (boardCopy[0] ?? []).reduce<number[]>((columns, card, index) => {
+    if (card.hidden) columns.push(index);
+    return columns;
+  }, []);
+
   return {
     state: {
       ...state,
       board: boardCopy,
       deck,
-      openColumns: [],
+      openColumns,
     },
     row,
   };
@@ -321,11 +326,7 @@ export function undoGame(state: GameState): GameState {
 }
 
 export function hasWon(board: Card[][] | undefined, deckLength: number): boolean {
-  if (board === undefined) return false;
+  if (board === undefined || board.length !== 1 || deckLength !== 0) return false;
 
-  if (board.length > 1 || deckLength > 0) return false;
-
-  if (!board[0].every(x => x.val === CardVal.Ace)) return false;
-
-  return true;
+  return board[0].length === 4 && board[0].every(x => !x.hidden && x.val === CardVal.Ace);
 }

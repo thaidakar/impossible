@@ -182,6 +182,18 @@ describe("drawRow", () => {
     expect(next.board[0][1].hidden).toBeFalsy();
   });
 
+  it("keeps tracking open columns when fewer than four cards are drawn", () => {
+    const board = [
+      row(c(Suite.Spade, CardVal.Two), h(Suite.Heart, CardVal.Three), c(Suite.Club, CardVal.Four), c(Suite.Diamond, CardVal.Five)),
+    ];
+    const state = makeState({ board, deck: [c(Suite.Heart, CardVal.Six)], openColumns: [1] });
+
+    const { state: next } = drawRow(state);
+
+    expect(next.board[0][1].hidden).toBe(true);
+    expect(next.openColumns).toEqual([1]);
+  });
+
   it("draws nothing when the deck is empty", () => {
     const state = makeState({ board: [row(c(Suite.Spade, CardVal.Two), c(Suite.Heart, CardVal.Three), c(Suite.Club, CardVal.Four), c(Suite.Diamond, CardVal.Five))], deck: [] });
     const { state: next, row: drawnRow } = drawRow(state);
@@ -551,6 +563,15 @@ describe("hasWon", () => {
     expect(hasWon([aces, row(c(Suite.Spade, CardVal.Two), c(Suite.Heart, CardVal.Three), c(Suite.Club, CardVal.Four), c(Suite.Diamond, CardVal.Five))], 0)).toBe(false);
     expect(hasWon([row(c(Suite.Spade, CardVal.Two), c(Suite.Heart, CardVal.Three), c(Suite.Club, CardVal.Four), c(Suite.Diamond, CardVal.Five))], 0)).toBe(false);
     expect(hasWon(undefined, 0)).toBe(false);
+  });
+
+  it("is false for empty, incomplete, or hidden ace boards", () => {
+    const aces = row(c(Suite.Spade, CardVal.Ace), c(Suite.Heart, CardVal.Ace), c(Suite.Club, CardVal.Ace), c(Suite.Diamond, CardVal.Ace));
+
+    expect(hasWon([], 0)).toBe(false);
+    expect(hasWon([[]], 0)).toBe(false);
+    expect(hasWon([aces.slice(0, 3)], 0)).toBe(false);
+    expect(hasWon([aces.map(card => h(card.suite, card.val))], 0)).toBe(false);
   });
 });
 
