@@ -18,7 +18,7 @@ import {
     Td,
     useBoolean
   } from '@chakra-ui/react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Confetti } from './Confetti';
 import { Card, CardVal } from '../Logic/Deck';
 
@@ -67,6 +67,7 @@ export const AchievementsModal = (props: AchievementsProps) => {
     const [isFirstNewRow, setIsFirstNewRow] = useBoolean(true);
     const [throwConfetti, setThrowConfetti] = useBoolean(false);
     const [winLock, setWinLock] = useBoolean(false);
+    const wasReset = useRef(reset);
 
     const showToast = useCallback((desc: string, isComplete?: boolean) => {
         toast({
@@ -109,22 +110,19 @@ export const AchievementsModal = (props: AchievementsProps) => {
     useEffect(() => {
         if (board.length === 1 && !!board?.at(0)?.every(x => x.val === CardVal.Ace) && deck?.length === 0 && cleared >= 48 && !winLock) {
             setWinLock.on();
-            const timeout = window.setTimeout(() => {
-                const newAchievement: Achievements = {
-                    ...loadAchievements(),
-                    GamesWon: safeInc(achievements?.GamesWon)
-                };
+            const current = loadAchievements();
+            const newAchievement: Achievements = {
+                ...current,
+                GamesWon: safeInc(current.GamesWon)
+            };
 
-                setAchievements(newAchievement);
+            setAchievements(newAchievement);
 
-                if (newAchievement.GamesWon === 1) showToast('Win a game');
+            if (newAchievement.GamesWon === 1) showToast('Win a game');
 
-                setThrowConfetti.on();
-            }, 20);
-
-            return () => window.clearTimeout(timeout);
+            setThrowConfetti.on();
         }
-    }, [achievements?.GamesWon, board, cleared, deck?.length, setThrowConfetti, setWinLock, showToast, winLock]);
+    }, [board, cleared, deck?.length, setThrowConfetti, setWinLock, showToast, winLock]);
 
     useEffect(() => {
         if (isFirstNewRow && safeCnt(achievements?.ClearedFirstHand) < cleared) {
@@ -140,7 +138,7 @@ export const AchievementsModal = (props: AchievementsProps) => {
                     showToast(cleared === 12 ? 
                         'Three rows cleared in the first hand' :
                         `All but ${16 - cleared} cards cleared in the first hand`
-                    , cleared === 15);
+                    , cleared === 14);
                 }
             }, 30);
 
@@ -153,24 +151,22 @@ export const AchievementsModal = (props: AchievementsProps) => {
     }, [achievements?.ClearedFirstHand, cleared, deckSize, isFirstNewRow, setIsFirstNewRow, showToast]);
 
     useEffect(() => {
-        let timeout: number | undefined;
-        if (reset && cleared < 48 && !!achievements) {
-            timeout = window.setTimeout(() => {
-                const newAchievement: Achievements = {
-                    ...loadAchievements(),
-                    GamesLost: safeInc(achievements.GamesLost)
-                };
-
-                setAchievements(newAchievement);
-            }, 40);
-        } 
+        const isNewReset = reset && !wasReset.current;
+        wasReset.current = reset;
+        if (!isNewReset) return;
 
         setIsFirstNewRow.on();
         setWinLock.off();
-        return () => {
-            if (timeout !== undefined) window.clearTimeout(timeout);
-        };
-    }, [achievements, cleared, reset, setIsFirstNewRow, setWinLock]);
+        setThrowConfetti.off();
+
+        if (cleared < 48) {
+            const current = loadAchievements();
+            setAchievements({
+                ...current,
+                GamesLost: safeInc(current.GamesLost)
+            });
+        }
+    }, [cleared, reset, setIsFirstNewRow, setThrowConfetti, setWinLock]);
 
     const getCompStyle = (isMax: boolean) => {
         return { color: isMax ? 'goldenrod' : ''};
@@ -207,9 +203,9 @@ export const AchievementsModal = (props: AchievementsProps) => {
                                             <Td isNumeric>{safeCnt(achievements?.ColsCleared)} / 3</Td>
                                         </Tr>
                                         
-                                        <Tr style={getCompStyle(safeCnt(achievements?.ClearedFirstHand) === 15)}>
+                                        <Tr style={getCompStyle(safeCnt(achievements?.ClearedFirstHand) === 14)}>
                                             <Td>Cards cleared in the first hand</Td>
-                                            <Td isNumeric>{safeCnt(achievements?.ClearedFirstHand)} / 15</Td>
+                                            <Td isNumeric>{safeCnt(achievements?.ClearedFirstHand)} / 14</Td>
                                         </Tr>
                                     </Tbody>
                                 </Table>

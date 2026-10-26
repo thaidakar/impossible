@@ -40,6 +40,12 @@ export const App = () => {
   React.useEffect(() => {
     const handleSpacebarPress = (event: KeyboardEvent) => {
       if (event.key === " ") {
+        const target = event.target;
+        if (target instanceof HTMLElement && target.closest("button, a, input, select, textarea, [role='button'], [role='menuitem'], [contenteditable='true']")) {
+          return;
+        }
+
+        event.preventDefault();
         setAddRow.on();
       }
       else if (event.key.toLowerCase() === "r") {
