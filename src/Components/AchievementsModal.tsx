@@ -18,7 +18,7 @@ import {
     Td,
     useBoolean
   } from '@chakra-ui/react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Confetti } from './Confetti';
 import { Card, CardVal } from '../Logic/Deck';
 
@@ -29,8 +29,8 @@ export interface AchievementsProps {
     reset: boolean;
     deckSize: number;
     board: Card[][];
-    doParty: number;
     deck: Card[];
+    isSolutionReplay: boolean;
 }
 
 interface Achievements {
@@ -59,14 +59,16 @@ const safeInc = (toInc?: number) => toInc ? toInc + 1 : 1;
 const safeCnt = (toCnt?: number) => toCnt ?? 0;
 
 export const AchievementsModal = (props: AchievementsProps) => {
-    const { cleared, openColumns, reset, deckSize, board, doParty, deck } = props;
+    const { cleared, openColumns, reset, deckSize, board, deck, isSolutionReplay } = props;
     
     const toast = useToast();
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [achievements, setAchievements] = useState<Achievements>();
     const [isFirstNewRow, setIsFirstNewRow] = useBoolean(true);
     const [throwConfetti, setThrowConfetti] = useBoolean(false);
-    const [winLock, setWinLock] = useBoolean(false);
+    const winLock = useRef(false);
+    const winTimeout = useRef<number>();
+    const lossCounted = useRef(false);
 
     const showToast = useCallback((desc: string, isComplete?: boolean) => {
         toast({
@@ -79,6 +81,16 @@ export const AchievementsModal = (props: AchievementsProps) => {
         });
     }, [toast]);
 
+    const hideConfetti = useCallback(() => setThrowConfetti.off(), [setThrowConfetti]);
+
+    useEffect(() => {
+        if (!throwConfetti) return;
+
+        // Failsafe for a missed canvas completion callback.
+        const timeout = window.setTimeout(hideConfetti, 10_000);
+        return () => window.clearTimeout(timeout);
+    }, [hideConfetti, throwConfetti]);
+
     useEffect(() => {
         setAchievements(loadAchievements());
     }, []);
@@ -90,6 +102,8 @@ export const AchievementsModal = (props: AchievementsProps) => {
     }, [achievements]);
 
     useEffect(() => {
+        if (isSolutionReplay) return;
+
         if (safeCnt(achievements?.ColsCleared) < openColumns.length) {
             setTimeout(() => {
                 const newAchievement: Achievements = {
@@ -104,12 +118,12 @@ export const AchievementsModal = (props: AchievementsProps) => {
                     , openColumns.length === 3);
             }, 10);
         }
-    }, [achievements?.ColsCleared, openColumns, showToast]);
+    }, [achievements?.ColsCleared, isSolutionReplay, openColumns, showToast]);
 
     useEffect(() => {
-        if (board.length === 1 && !!board?.at(0)?.every(x => x.val === CardVal.Ace) && deck?.length === 0 && cleared >= 48 && !winLock) {
-            setWinLock.on();
-            const timeout = window.setTimeout(() => {
+        if (!isSolutionReplay && board.length === 1 && !!board?.at(0)?.every(x => x.val === CardVal.Ace) && deck?.length === 0 && cleared >= 48 && !winLock.current) {
+            winLock.current = true;
+            winTimeout.current = window.setTimeout(() => {
                 const newAchievement: Achievements = {
                     ...loadAchievements(),
                     GamesWon: safeInc(achievements?.GamesWon)
@@ -121,12 +135,12 @@ export const AchievementsModal = (props: AchievementsProps) => {
 
                 setThrowConfetti.on();
             }, 20);
-
-            return () => window.clearTimeout(timeout);
         }
-    }, [achievements?.GamesWon, board, cleared, deck?.length, setThrowConfetti, setWinLock, showToast, winLock]);
+    }, [achievements?.GamesWon, board, cleared, deck?.length, isSolutionReplay, setThrowConfetti, showToast]);
 
     useEffect(() => {
+        if (isSolutionReplay) return;
+
         if (isFirstNewRow && safeCnt(achievements?.ClearedFirstHand) < cleared) {
             const timeout = window.setTimeout(() => {
                 const newAchievement: Achievements = {
@@ -150,27 +164,37 @@ export const AchievementsModal = (props: AchievementsProps) => {
         
         if (deckSize < 36) setIsFirstNewRow.off();
 
-    }, [achievements?.ClearedFirstHand, cleared, deckSize, isFirstNewRow, setIsFirstNewRow, showToast]);
+    }, [achievements?.ClearedFirstHand, cleared, deckSize, isFirstNewRow, isSolutionReplay, setIsFirstNewRow, showToast]);
 
     useEffect(() => {
-        let timeout: number | undefined;
-        if (reset && cleared < 48 && !!achievements) {
-            timeout = window.setTimeout(() => {
-                const newAchievement: Achievements = {
-                    ...loadAchievements(),
-                    GamesLost: safeInc(achievements.GamesLost)
-                };
+        if (!reset) return;
 
-                setAchievements(newAchievement);
-            }, 40);
-        } 
-
+        winLock.current = false;
+        if (winTimeout.current !== undefined) window.clearTimeout(winTimeout.current);
         setIsFirstNewRow.on();
-        setWinLock.off();
-        return () => {
-            if (timeout !== undefined) window.clearTimeout(timeout);
-        };
-    }, [achievements, cleared, reset, setIsFirstNewRow, setWinLock]);
+        setThrowConfetti.off();
+    }, [reset, setIsFirstNewRow, setThrowConfetti]);
+
+    useEffect(() => () => {
+        if (winTimeout.current !== undefined) window.clearTimeout(winTimeout.current);
+    }, []);
+
+    useEffect(() => {
+        if (!reset) {
+            lossCounted.current = false;
+            return;
+        }
+
+        if (lossCounted.current || cleared >= 48 || !achievements || isSolutionReplay) return;
+
+        // Record immediately: `reset` only stays true for one render, so a delay
+        // would be cancelled by the transition back to the new game.
+        lossCounted.current = true;
+        setAchievements({
+            ...loadAchievements(),
+            GamesLost: safeInc(achievements.GamesLost)
+        });
+    }, [achievements, cleared, isSolutionReplay, reset]);
 
     const getCompStyle = (isMax: boolean) => {
         return { color: isMax ? 'goldenrod' : ''};
@@ -219,8 +243,7 @@ export const AchievementsModal = (props: AchievementsProps) => {
                 </Modal> 
             </Portal>
             <Portal>
-                {throwConfetti && <Confetti gamesWon={loadAchievements()?.GamesWon ?? 1} onComplete={() => setThrowConfetti.off()} />}
-                {!!doParty && <Confetti key={`party-${doParty}`} gamesWon={loadAchievements()?.GamesWon ?? 1} onComplete={() => setThrowConfetti.off()} />}
+                {!isSolutionReplay && throwConfetti && <Confetti gamesWon={achievements?.GamesWon ?? 1} onComplete={hideConfetti} />}
             </Portal>
         </>
     );

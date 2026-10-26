@@ -1,4 +1,4 @@
-import { Card, CardVal, Suite, GetNextCard, cardValues, suiteValues } from "./Deck";
+import { Card, CardVal, Suite, GetNextCard, cardValues, shuffleDeck, suiteValues } from "./Deck";
 
 export interface UndoState {
   board: Card[][];
@@ -17,6 +17,12 @@ export interface GameState {
   addUndoRow: boolean;
 }
 
+export interface GameMove {
+  type: "clear" | "move" | "draw";
+  row?: number;
+  column?: number;
+}
+
 const HIDDEN_ACE: Card = { suite: Suite.Spade, val: CardVal.Ace, hidden: true };
 
 export const sameCard = (a: Card, b: Card) => a.suite === b.suite && a.val === b.val;
@@ -31,11 +37,15 @@ const snapshot = (state: GameState): UndoState => ({
 /**
  * Creates a fresh game: a full 52-card deck with the initial four rows dealt.
  */
-export function createNewGame(): GameState {
+export function createNewGame(orderedDeck?: Card[]): GameState {
   const deck: Card[] = [];
-  for (const suite of suiteValues) {
-    for (const val of cardValues) {
-      deck.push({ suite, val });
+  if (orderedDeck) {
+    deck.push(...orderedDeck.map(card => ({ ...card })));
+  } else {
+    for (const suite of suiteValues) {
+      for (const val of cardValues) {
+        deck.push({ suite, val });
+      }
     }
   }
 
@@ -46,6 +56,7 @@ export function createNewGame(): GameState {
     cleared: 0,
     addUndoRow: false,
   };
+  if (!orderedDeck) state.deck = shuffleDeck(state.deck);
 
   for (let i = 0; i < 4; i++) {
     state = drawRow(state).state;
@@ -318,6 +329,17 @@ export function undoGame(state: GameState): GameState {
     cleared: state.undoState.cleared,
     undoState: undefined,
   };
+}
+
+export function applyGameMove(state: GameState, move: GameMove): GameState {
+  switch (move.type) {
+    case "draw":
+      return addRowToGame(state);
+    case "clear":
+      return handleCardClick(state, move.row!, move.column!);
+    case "move":
+      return handleMoveUp(state, move.row!, move.column!);
+  }
 }
 
 export function hasWon(board: Card[][] | undefined, deckLength: number): boolean {

@@ -53,7 +53,10 @@ export const TutorialModal = () => {
                                         considered the highest value.
                                         <br/>
                                         <br/>
-                                        Most games will be losses, but that's part of what makes a win such an achievement!
+                                        Every new deal has at least one winning path. Finding it is still the hard part!
+                                        <br/>
+                                        <br/>
+                                        If you run out of cards, use "Show winning path" to replay one possible solution from the start.
                                     </AccordionPanel>
                                 </AccordionItem>
                                 <AccordionItem>
