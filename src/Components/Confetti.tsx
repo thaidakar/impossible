@@ -30,7 +30,7 @@ export const Confetti = (props: ConfettiProps) => {
             width={windowDimension.width}
             height={windowDimension.height}
             tweenDuration={5000}
-            numberOfPieces={400 + 10 * gamesWon}
+            numberOfPieces={Math.min(300, 200 + 5 * Math.max(0, gamesWon))}
             colors={['#f44336','#e91e63','#9c27b0','#673ab7']}
             recycle={false}
             onConfettiComplete={onComplete}

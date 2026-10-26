@@ -19,7 +19,8 @@ import {
 } from "@chakra-ui/react";
 import { ColorModeSwitcher } from "./ColorModeSwitcher";
 import { Card, displayName, Suite, CardVal } from "./Logic/Deck";
-import { GameState, canClick, createNewGame, addRowToGame, handleCardClick, handleMoveUp, hasWon, undoGame } from "./Logic/Game";
+import { GameState, applyGameMove, canClick, addRowToGame, handleCardClick, handleMoveUp, hasWon, undoGame } from "./Logic/Game";
+import { SolvableDeal, createSolvableDeal } from "./Logic/GameSolver";
 import { HamburgerIcon, RepeatIcon } from "@chakra-ui/icons";
 import { TutorialModal } from "./Components/TutorialModal";
 import { AchievementsModal } from "./Components/AchievementsModal";
@@ -29,13 +30,26 @@ import './App.css';
 
 export const App = () => {
 
-  const [game, setGame] = React.useState<GameState>(() => createNewGame());
-  const [reset, setReset] = useBoolean(true);
+  const [firstDeal] = React.useState<SolvableDeal>(() => createSolvableDeal());
+  const [game, setGame] = React.useState<GameState>(firstDeal.game);
+  const initialDeal = React.useRef(firstDeal);
+  const [reset, setReset] = useBoolean(false);
   const [addRow, setAddRow] = useBoolean(false);
-  const [doParty, setDoParty] = React.useState(0);
   const [isPageLoad, setIsPageLoad] = useBoolean(true);
   const [undo, setUndo] = useBoolean(false);
   const [hasUndone, setHasUndone] = useBoolean(false);
+  const [isShowingSolution, setShowingSolution] = useBoolean(false);
+  const [isSolutionDemo, setIsSolutionDemo] = useBoolean(false);
+  const [solutionIndex, setSolutionIndex] = React.useState(0);
+
+  const startNewGame = React.useCallback(() => {
+    const deal = createSolvableDeal();
+    initialDeal.current = deal;
+    setGame(deal.game);
+    setShowingSolution.off();
+    setIsSolutionDemo.off();
+    setSolutionIndex(0);
+  }, [setIsSolutionDemo, setShowingSolution]);
 
   React.useEffect(() => {
     const handleSpacebarPress = (event: KeyboardEvent) => {
@@ -58,22 +72,44 @@ export const App = () => {
     if (addRow) {
       setAddRow.off();
 
+      if (isShowingSolution) return;
+
       if (game.deck.length > 0) {
         setGame(prev => addRowToGame(prev));
       }
-      else if (hasWon(game.board, game.deck.length)) {
-        setDoParty(Math.random());
-      }
     }
-  }, [addRow, game, setAddRow]);
+  }, [addRow, game, isShowingSolution, setAddRow]);
 
   React.useEffect(() => {
     if (reset) {
-      setGame(createNewGame());
-      setDoParty(0);
+      startNewGame();
       setReset.off();
     }
-  }, [reset, setReset]);
+  }, [reset, setReset, startNewGame]);
+
+  React.useEffect(() => {
+    if (!isShowingSolution) return;
+
+    const solution = initialDeal.current.solution;
+    if (solutionIndex >= solution.length) {
+      setShowingSolution.off();
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setGame(prev => applyGameMove(prev, solution[solutionIndex]));
+      setSolutionIndex(solutionIndex + 1);
+    }, 350);
+
+    return () => window.clearTimeout(timer);
+  }, [isShowingSolution, setShowingSolution, solutionIndex]);
+
+  const showWinningPath = () => {
+    setGame(initialDeal.current.game);
+    setSolutionIndex(0);
+    setIsSolutionDemo.on();
+    setShowingSolution.on();
+  };
 
   React.useEffect(() => {
     // When the deck is empty and the board is fully cleared, start a new game
@@ -118,7 +154,7 @@ export const App = () => {
         cardClass += ' golden';
       }
     }
-    if (!canClick(game, ridx, cidx)) {
+    if (isShowingSolution || !canClick(game, ridx, cidx)) {
       cardClass += ' no-tap';
     }
     return cardClass;
@@ -132,8 +168,14 @@ export const App = () => {
                 className={getClass(card, ridx, cidx)}
                 w={[85, 90, 100]} h={130} p={0}
                 key={card.suite + card.val + ridx + cidx}
-                onClick={(e) => { e.preventDefault(); setGame(prev => handleCardClick(prev, ridx, cidx)); }}
-                onContextMenu={(e) => { e.preventDefault(); setGame(prev => handleMoveUp(prev, ridx, cidx)); }}>
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (!isShowingSolution) setGame(prev => handleCardClick(prev, ridx, cidx));
+                }}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  if (!isShowingSolution) setGame(prev => handleMoveUp(prev, ridx, cidx));
+                }}>
                   <CardBody hidden={card.hidden} px={3} pt={2} className='card-body'>
                     <HStack right={[7.7, 0]} className={card.suite === Suite.Diamond || card.suite === Suite.Heart ? 'suite-r' : ''} justifyContent='space-between' style={{ position: card.val === CardVal.Ten ? 'relative' : 'inherit'}}>
                       <StackItem>
@@ -156,7 +198,7 @@ export const App = () => {
           <Button variant='ghost' onClick={resetDeck} className='reset'>
             <RepeatIcon key={`repeat-${reset}`} className={isPageLoad ? '' : 'rotating'} />
           </Button>
-          <Button isDisabled={!game.undoState} variant='ghost' className='reset' onClick={setUndo.on}>
+          <Button isDisabled={!game.undoState || isShowingSolution} variant='ghost' className='reset' onClick={setUndo.on}>
             <FaUndo size='14' key={`undo-${undo}`} className={!hasUndone ? '' : 'rotating'} />
           </Button>
           <Menu>
@@ -171,7 +213,7 @@ export const App = () => {
               <MenuList zIndex={1000}>
                 <ColorModeSwitcher />
                 <MenuDivider border='none' />
-                <AchievementsModal deck={game.deck} doParty={doParty} board={game.board} cleared={game.cleared} openColumns={game.openColumns} deckSize={game.deck.length} reset={reset} />
+                <AchievementsModal deck={game.deck} board={game.board} cleared={game.cleared} openColumns={game.openColumns} deckSize={game.deck.length} reset={reset} isSolutionReplay={isSolutionDemo} />
                 <MenuDivider border='none'  />
                 <TutorialModal />
                 <MenuDivider />
@@ -186,15 +228,35 @@ export const App = () => {
         </HStack>
         <VStack>
           <Box style={{ borderBottom: `${ game.board.length > 7 ? '2px solid black' : ''}`}} h={500} overflowX='hidden' overflowY='auto'>
-            <SimpleGrid key={Math.random()} columns={4} spacingX={1}>
+            <SimpleGrid columns={4} spacingX={1}>
               {game.board && displayBoard()}
             </SimpleGrid>
           </Box>
-          <button className='pushable' onClick={setAddRow.on}>
+          <button
+            className='pushable'
+            onClick={() => {
+              if (isSolutionDemo) return;
+
+              if (game.deck.length === 0 && !hasWon(game.board, game.deck.length)) {
+                showWinningPath();
+              }
+              else {
+                setAddRow.on();
+              }
+            }}
+          >
             <span className="shadow"></span>
             <span className="edge"></span>
             <span className='front'>
-              {game.deck?.length > 0 ? `${game.deck?.length / 4 < 9 ? game.deck?.length / 4 : 9} row${game.deck?.length / 4 === 1 ? '' : 's'} left` : game.cleared === 48 ? 'woo hoo!' : 'womp womp'}
+              {isShowingSolution
+                ? `winning path ${solutionIndex}/${initialDeal.current.solution.length}`
+                : isSolutionDemo
+                  ? 'solution complete'
+                  : game.deck.length > 0
+                    ? `${game.deck.length / 4 < 9 ? game.deck.length / 4 : 9} row${game.deck.length / 4 === 1 ? '' : 's'} left`
+                    : hasWon(game.board, game.deck.length)
+                      ? 'woo hoo!'
+                      : 'show winning path'}
             </span>
           </button>
         </VStack>

@@ -53,30 +53,19 @@ export interface Card {
 export const suiteValues = Object.values(Suite) as Suite[];
 export const cardValues = Object.values(CardVal) as CardVal[];
 
-export function GetNextCard(deck: Card[]) {
+export function shuffleDeck(deck: Card[]): Card[] {
+    const shuffled = [...deck];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+}
 
+export function GetNextCard(deck: Card[]) {
     if (deck.length === 0) {
         return {idx: undefined, card: undefined};
     }
 
-    let card: Card;
-    let idx: number;
-
-    while (true) {
-        const suite = suiteValues[Math.floor(Math.random() * suiteValues.length)];
-        const value = cardValues[Math.floor(Math.random() * cardValues.length)];
-
-        card = {suite: suite, val: value} as Card;
-
-        idx = deck.findIndex(c => c.suite === suite && c.val === value);
-
-        if (idx === -1) {
-            continue;
-        }
-        else {
-            break;
-        }
-    }
-
-    return {idx, card};
+    return {idx: 0, card: deck[0]};
 }
